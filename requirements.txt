@@ -8,4 +8,5 @@ python-dotenv==1.0.1
 Flask-WTF==0.15.1
 WTForms==2.3.3
 PyMySQL==1.1.0
-cryptography==42.0.2 
+cryptography==42.0.2
+gunicorn==21.2.0 
