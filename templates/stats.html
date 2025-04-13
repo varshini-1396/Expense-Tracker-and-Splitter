@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MoneyMate - Statistics</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css', v=1) }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="logo">MoneyMate</div>
+        <div class="nav-links">
+            <a href="{{ url_for('index') }}">Home</a>
+            <a href="{{ url_for('stats') }}" class="active">Stats</a>
+            <a href="{{ url_for('splitter') }}">Splitter</a>
+            <a href="{{ url_for('groups_page') }}">Groups</a>
+            <a href="{{ url_for('profile_page') }}">Profile</a>
+        </div>
+    </nav>
+
+    <main>
+        <div class="greeting">
+            <h1>Your <span class="purple">Financial Statistics</span></h1>
+        </div>
+
+        <div class="dashboard">
+            <div class="balance-card">
+                <h2>Total Balance</h2>
+                <div class="amount" id="total-balance">₹0</div>
+                
+                <div class="transactions">
+                    <div class="incoming">
+                        <span class="arrow up">▲</span> Total Income
+                        <div class="amount" id="total-income">+₹0</div>
+                    </div>
+                    
+                    <div class="outgoing">
+                        <span class="arrow down">▼</span> Total Expenses
+                        <div class="amount" id="total-expenses">-₹0</div>
+                        <div class="expense-breakdown">
+                            <span>Personal: <span id="personal-expenses">₹0</span></span>
+                            <span>Group: <span id="group-expenses">₹0</span></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="transactions-list">
+                <h2>Expense Distribution</h2>
+                <canvas id="category-chart"></canvas>
+            </div>
+
+            <div class="transactions-list">
+                <h2>Monthly Trends</h2>
+                <canvas id="monthly-chart"></canvas>
+            </div>
+
+            <div class="transactions-list">
+                <h2>Recent Transactions</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Description</th>
+                            <th>Category</th>
+                            <th>Amount</th>
+                            <th>Type</th>
+                        </tr>
+                    </thead>
+                    <tbody id="recent-transactions-table">
+                        <!-- Transactions will be added here dynamically -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        let categoryChart, monthlyChart;
+
+        document.addEventListener('DOMContentLoaded', loadStats);
+
+        function loadStats() {
+            fetch('/api/stats')
+                .then(response => response.json())
+                .then(data => {
+                    updateOverview(data);
+                    updateCharts(data);
+                    updateRecentTransactions(data.recent_transactions);
+                });
+        }
+
+        function updateOverview(data) {
+            document.getElementById('total-balance').textContent = `₹${data.total_balance.toFixed(2)}`;
+            document.getElementById('total-income').textContent = `+₹${data.total_incoming.toFixed(2)}`;
+            document.getElementById('total-expenses').textContent = `-₹${data.total_outgoing.toFixed(2)}`;
+            
+            const personalExpenses = data.total_outgoing - data.total_group_outgoing;
+            document.getElementById('personal-expenses').textContent = `₹${personalExpenses.toFixed(2)}`;
+            document.getElementById('group-expenses').textContent = `₹${data.total_group_outgoing.toFixed(2)}`;
+        }
+
+        function updateCharts(data) {
+            // Update Category Distribution Chart
+            const categoryCtx = document.getElementById('category-chart').getContext('2d');
+            const categories = Object.keys(data.category_totals);
+            const outgoingData = categories.map(cat => data.category_totals[cat].outgoing);
+            const groupOutgoingData = categories.map(cat => data.category_totals[cat].group_outgoing);
+
+            if (categoryChart) {
+                categoryChart.destroy();
+            }
+
+            categoryChart = new Chart(categoryCtx, {
+                type: 'pie',
+                data: {
+                    labels: categories,
+                    datasets: [{
+                        label: 'Personal Expenses',
+                        data: outgoingData,
+                        backgroundColor: 'rgba(255, 99, 132, 0.7)'
+                    }, {
+                        label: 'Group Expenses',
+                        data: groupOutgoingData,
+                        backgroundColor: 'rgba(54, 162, 235, 0.7)'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+
+            // Update Monthly Trends Chart
+            const monthlyCtx = document.getElementById('monthly-chart').getContext('2d');
+            const months = Object.keys(data.monthly_totals).sort();
+            const monthlyIncoming = months.map(month => data.monthly_totals[month].incoming);
+            const monthlyOutgoing = months.map(month => data.monthly_totals[month].outgoing);
+            const monthlyGroupOutgoing = months.map(month => data.monthly_totals[month].group_outgoing);
+
+            if (monthlyChart) {
+                monthlyChart.destroy();
+            }
+
+            monthlyChart = new Chart(monthlyCtx, {
+                type: 'bar',
+                data: {
+                    labels: months,
+                    datasets: [{
+                        label: 'Income',
+                        data: monthlyIncoming,
+                        backgroundColor: 'rgba(75, 192, 192, 0.7)'
+                    }, {
+                        label: 'Personal Expenses',
+                        data: monthlyOutgoing,
+                        backgroundColor: 'rgba(255, 99, 132, 0.7)'
+                    }, {
+                        label: 'Group Expenses',
+                        data: monthlyGroupOutgoing,
+                        backgroundColor: 'rgba(54, 162, 235, 0.7)'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        x: {
+                            stacked: true
+                        },
+                        y: {
+                            stacked: true
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateRecentTransactions(transactions) {
+            const tbody = document.getElementById('recent-transactions-table');
+            tbody.innerHTML = '';
+            
+            transactions.forEach(t => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${new Date(t.date).toLocaleDateString()}</td>
+                    <td>${t.description}</td>
+                    <td>${t.category || 'Uncategorized'}</td>
+                    <td class="${t.type}">${t.type === 'incoming' ? '+' : '-'}₹${t.amount}</td>
+                    <td>${t.type}${t.is_group ? ' (Group)' : ''}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+    </script>
+</body>
+</html> 

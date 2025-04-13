@@ -1,0 +1,12 @@
+# Environment variables
+.env
+.env.local
+.env.*
+!.env.example
+
+# Environment directory
+.env/
+
+# Other common environment file patterns
+*.env
+.env*.local

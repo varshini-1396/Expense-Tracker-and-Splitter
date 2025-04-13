@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MoneyMate - Profile</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="logo">MoneyMate</div>
+        <div class="nav-links">
+            <a href="{{ url_for('index') }}">Home</a>
+            <a href="{{ url_for('stats') }}">Stats</a>
+            <a href="{{ url_for('splitter') }}">Splitter</a>
+            <a href="{{ url_for('groups_page') }}">Groups</a>
+            <a href="{{ url_for('profile_page') }}" class="active">Profile</a>
+        </div>
+    </nav>
+
+    <main>
+        <div class="profile-container">
+            <div class="profile-header-card">
+                <div class="profile-info">
+                    <div class="profile-text">
+                        <h1 id="profile-name">Loading...</h1>
+                        <p class="since" id="member-since">Member since: Loading...</p>
+                    </div>
+                    <div class="profile-actions">
+                        <button class="edit-profile-btn" onclick="toggleEditMode()">
+                            Edit Profile
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="profile-details-card">
+                <h2>Profile Details</h2>
+                <form id="profile-form" onsubmit="saveProfile(event)">
+                    <div class="profile-details-grid">
+                        <div class="detail-group">
+                            <label for="username">Username</label>
+                            <input type="text" id="username" readonly>
+                        </div>
+                        <div class="detail-group">
+                            <label for="email">Email</label>
+                            <input type="email" id="email" readonly>
+                        </div>
+                        <div class="detail-group">
+                            <label for="name">Full Name</label>
+                            <input type="text" id="name" readonly>
+                        </div>
+                        <div class="detail-group">
+                            <label for="phone">Phone</label>
+                            <input type="tel" id="phone" readonly>
+                        </div>
+                        <div class="detail-group">
+                            <label for="upi_id">UPI ID</label>
+                            <input type="text" id="upi_id" readonly>
+                        </div>
+                    </div>
+                    <div id="edit-buttons" style="display: none;">
+                        <button type="button" class="cancel-btn" onclick="cancelEdit()">Cancel</button>
+                        <button type="submit" class="save-btn">Save Changes</button>
+                    </div>
+                </form>
+
+                <div class="security-section">
+                    <div class="security-actions">
+                        <button class="change-password-btn" onclick="showPasswordModal()">
+                            Change Password
+                        </button>
+                        <button class="logout-btn" onclick="logout()">
+                            Logout
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Password Change Modal -->
+    <div id="password-modal" class="modal">
+        <div class="modal-content">
+            <h2>Change Password</h2>
+            <form id="password-form" onsubmit="changePassword(event)">
+                <div class="form-group">
+                    <label for="current-password">Current Password</label>
+                    <input type="password" id="current-password" required>
+                </div>
+                <div class="form-group">
+                    <label for="new-password">New Password</label>
+                    <input type="password" id="new-password" required>
+                </div>
+                <div class="form-group">
+                    <label for="confirm-password">Confirm New Password</label>
+                    <input type="password" id="confirm-password" required>
+                </div>
+                <div class="modal-buttons">
+                    <button type="button" onclick="closePasswordModal()">Cancel</button>
+                    <button type="submit">Change Password</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let originalData = {};
+
+        document.addEventListener('DOMContentLoaded', loadProfile);
+
+        function logout() {
+            fetch('/logout')
+                .then(() => {
+                    window.location.href = '/login';
+                })
+                .catch(error => {
+                    console.error('Error logging out:', error);
+                });
+        }
+
+        function loadProfile() {
+            fetch('/api/profile')
+                .then(response => response.json())
+                .then(data => {
+                    originalData = data;
+                    document.getElementById('profile-name').textContent = data.name;
+                    document.getElementById('member-since').textContent = `Member since: ${new Date(data.created_at).toLocaleDateString()}`;
+                    document.getElementById('username').value = data.username;
+                    document.getElementById('email').value = data.email;
+                    document.getElementById('name').value = data.name;
+                    document.getElementById('phone').value = data.phone || '';
+                    document.getElementById('upi_id').value = data.upi_id || '';
+                });
+        }
+
+        function toggleEditMode() {
+            const inputs = document.querySelectorAll('#profile-form input:not(#username), #profile-form textarea');
+            const editButtons = document.getElementById('edit-buttons');
+            const isReadOnly = inputs[0].readOnly;
+
+            inputs.forEach(input => {
+                input.readOnly = !isReadOnly;
+            });
+
+            editButtons.style.display = isReadOnly ? 'flex' : 'none';
+        }
+
+        function cancelEdit() {
+            const inputs = document.querySelectorAll('#profile-form input, #profile-form textarea');
+            inputs.forEach(input => {
+                input.readOnly = true;
+                input.value = originalData[input.id] || '';
+            });
+            document.getElementById('edit-buttons').style.display = 'none';
+        }
+
+        function saveProfile(event) {
+            event.preventDefault();
+            
+            const updatedData = {
+                email: document.getElementById('email').value,
+                name: document.getElementById('name').value,
+                phone: document.getElementById('phone').value,
+                upi_id: document.getElementById('upi_id').value
+            };
+
+            fetch('/api/profile', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(updatedData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                originalData = data;
+                document.getElementById('profile-name').textContent = data.name;
+                toggleEditMode();
+            });
+        }
+
+        function showPasswordModal() {
+            document.getElementById('password-modal').style.display = 'flex';
+        }
+
+        function closePasswordModal() {
+            document.getElementById('password-modal').style.display = 'none';
+            document.getElementById('password-form').reset();
+        }
+
+        function changePassword(event) {
+            event.preventDefault();
+            
+            const newPassword = document.getElementById('new-password').value;
+            const confirmPassword = document.getElementById('confirm-password').value;
+            
+            if (newPassword !== confirmPassword) {
+                alert('New passwords do not match!');
+                return;
+            }
+
+            const passwordData = {
+                current_password: document.getElementById('current-password').value,
+                new_password: newPassword
+            };
+
+            fetch('/api/change-password', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(passwordData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    alert(data.error);
+                } else {
+                    alert('Password changed successfully!');
+                    closePasswordModal();
+                }
+            });
+        }
+    </script>
+</body>
+</html> 

@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MoneyMate - Bill Splitter</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="logo">MoneyMate</div>
+        <div class="nav-links">
+            <a href="{{ url_for('index') }}">Home</a>
+            <a href="{{ url_for('stats') }}">Stats</a>
+            <a href="{{ url_for('splitter') }}" class="active">Splitter</a>
+            <a href="{{ url_for('groups_page') }}">Groups</a>
+            <a href="{{ url_for('profile_page') }}">Profile</a>
+        </div>
+    </nav>
+
+    <main>
+        <div class="splitter-container">
+            <div class="splitter-card">
+                <div class="card-header">
+                    <h2><i class="fas fa-receipt"></i> Bill Splitter</h2>
+                    <p>Split your bills easily with friends</p>
+                </div>
+
+                <div class="bill-form">
+                    <div class="form-group">
+                        <label for="bill-amount">
+                            <i class="fas fa-rupee-sign"></i> Total Bill Amount
+                        </label>
+                        <input type="number" id="bill-amount" min="0" step="0.01" placeholder="Enter total amount" onchange="updateSplit()">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="tip-percentage">
+                            <i class="fas fa-percentage"></i> Tip Percentage (Optional)
+                        </label>
+                        <input type="number" id="tip-percentage" min="0" max="100" placeholder="Enter tip percentage" onchange="updateSplit()">
+                    </div>
+
+                    <div class="form-group">
+                        <label>
+                            <i class="fas fa-users"></i> People and Their Payments
+                        </label>
+                        <div class="people-list" id="people-list">
+                            <!-- People will be added here dynamically -->
+                        </div>
+                        <button class="add-person-btn" onclick="addPerson()">
+                            <i class="fas fa-plus"></i> Add Person
+                        </button>
+                    </div>
+
+                    <button class="calculate-btn" onclick="calculateSplit()">
+                        <i class="fas fa-calculator"></i> Calculate Split
+                    </button>
+                </div>
+
+                <div class="result-section" style="display: none;">
+                    <h3>Split Results</h3>
+                    <div class="result-details">
+                        <div class="result-item">
+                            <span>Bill Amount:</span>
+                            <span id="result-bill">₹0.00</span>
+                        </div>
+                        <div class="result-item">
+                            <span>Tip Amount:</span>
+                            <span id="result-tip">₹0.00</span>
+                        </div>
+                        <div class="result-item total">
+                            <span>Total Amount:</span>
+                            <span id="result-total">₹0.00</span>
+                        </div>
+                        <div class="result-item per-person">
+                            <span>Amount Per Person:</span>
+                            <span id="result-per-person">₹0.00</span>
+                        </div>
+                    </div>
+
+                    <div class="settlements-section">
+                        <h3>Settlements</h3>
+                        <div id="settlements-list" class="settlements-list">
+                            <!-- Settlements will be added here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        let peopleCount = 0;
+
+        function addPerson() {
+            peopleCount++;
+            const personDiv = document.createElement('div');
+            personDiv.className = 'person-item';
+            personDiv.innerHTML = `
+                <div class="person-details">
+                    <input type="text" placeholder="Enter name" class="person-name" onchange="updateSplit()">
+                    <input type="number" placeholder="Amount paid" class="person-paid" min="0" step="0.01" value="0" onchange="updateSplit()">
+                </div>
+                <button class="remove-person" onclick="removePerson(this)">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+            document.getElementById('people-list').appendChild(personDiv);
+            updateSplit();
+        }
+
+        function removePerson(button) {
+            button.parentElement.remove();
+            peopleCount--;
+            updateSplit();
+        }
+
+        function updateSplit() {
+            const billAmount = parseFloat(document.getElementById('bill-amount').value) || 0;
+            const tipPercentage = parseFloat(document.getElementById('tip-percentage').value) || 0;
+            const tipAmount = (billAmount * tipPercentage) / 100;
+            const totalAmount = billAmount + tipAmount;
+            const people = document.getElementsByClassName('person-item').length;
+            
+            if (people > 0) {
+                const amountPerPerson = totalAmount / people;
+                
+                document.getElementById('result-bill').textContent = `₹${billAmount.toFixed(2)}`;
+                document.getElementById('result-tip').textContent = `₹${tipAmount.toFixed(2)}`;
+                document.getElementById('result-total').textContent = `₹${totalAmount.toFixed(2)}`;
+                document.getElementById('result-per-person').textContent = `₹${amountPerPerson.toFixed(2)}`;
+                
+                document.querySelector('.result-section').style.display = 'block';
+            }
+        }
+
+        function calculateSplit() {
+            const billAmount = parseFloat(document.getElementById('bill-amount').value) || 0;
+            const tipPercentage = parseFloat(document.getElementById('tip-percentage').value) || 0;
+            const people = Array.from(document.getElementsByClassName('person-item'));
+
+            if (billAmount <= 0) {
+                alert('Please enter a valid bill amount');
+                return;
+            }
+
+            if (people.length === 0) {
+                alert('Please add at least one person');
+                return;
+            }
+
+            const tipAmount = (billAmount * tipPercentage) / 100;
+            const totalAmount = billAmount + tipAmount;
+            const amountPerPerson = totalAmount / people.length;
+
+            // Calculate total amount paid by all people
+            const totalPaid = people.reduce((sum, person) => {
+                const paid = parseFloat(person.querySelector('.person-paid').value) || 0;
+                return sum + paid;
+            }, 0);
+
+            // Check if total paid amount matches the bill total
+            if (Math.abs(totalPaid - totalAmount) > 0.01) {  // Using 0.01 to account for floating-point precision
+                let message = '';
+                if (totalPaid < totalAmount) {
+                    const remaining = (totalAmount - totalPaid).toFixed(2);
+                    message = `⚠️ Amount Mismatch\n\nTotal bill (with tip): ₹${totalAmount.toFixed(2)}\nAmount paid by all: ₹${totalPaid.toFixed(2)}\n\nShortfall: ₹${remaining}`;
+                } else {
+                    const excess = (totalPaid - totalAmount).toFixed(2);
+                    message = `⚠️ Amount Mismatch\n\nTotal bill (with tip): ₹${totalAmount.toFixed(2)}\nAmount paid by all: ₹${totalPaid.toFixed(2)}\n\nOverpaid: ₹${excess}`;
+                }
+                alert(message);
+                return;
+            }
+
+            // Calculate individual balances
+            const settlements = [];
+            const personBalances = people.map(person => {
+                const name = person.querySelector('.person-name').value || 'Unnamed';
+                const paid = parseFloat(person.querySelector('.person-paid').value) || 0;
+                return {
+                    name: name,
+                    paid: paid,
+                    balance: paid - amountPerPerson
+                };
+            });
+
+            // Calculate settlements
+            const debtors = personBalances.filter(p => p.balance < 0).sort((a, b) => a.balance - b.balance);
+            const creditors = personBalances.filter(p => p.balance > 0).sort((a, b) => b.balance - a.balance);
+
+            const settlementsList = document.getElementById('settlements-list');
+            settlementsList.innerHTML = '';
+
+            // Match debtors with creditors
+            debtors.forEach(debtor => {
+                let remainingDebt = Math.abs(debtor.balance);
+                
+                creditors.forEach(creditor => {
+                    if (remainingDebt > 0 && creditor.balance > 0) {
+                        const amount = Math.min(remainingDebt, creditor.balance);
+                        if (amount > 0) {
+                            const settlement = document.createElement('div');
+                            settlement.className = 'settlement-item';
+                            settlement.innerHTML = `
+                                <i class="fas fa-arrow-right"></i>
+                                <span class="debtor">${debtor.name}</span> owes 
+                                <span class="amount">₹${amount.toFixed(2)}</span> to 
+                                <span class="creditor">${creditor.name}</span>
+                            `;
+                            settlementsList.appendChild(settlement);
+                            
+                            remainingDebt -= amount;
+                            creditor.balance -= amount;
+                        }
+                    }
+                });
+            });
+
+            // Show the results
+            document.querySelector('.result-section').style.display = 'block';
+        }
+
+        // Add one person by default
+        addPerson();
+    </script>
+</body>
+</html> 

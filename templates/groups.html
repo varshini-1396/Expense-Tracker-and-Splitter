@@ -1,0 +1,901 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MoneyMate - Groups</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css', v=1) }}">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="logo">MoneyMate</div>
+        <div class="nav-links">
+            <a href="{{ url_for('index') }}">Home</a>
+            <a href="{{ url_for('stats') }}">Stats</a>
+            <a href="{{ url_for('splitter') }}">Splitter</a>
+            <a href="{{ url_for('groups_page') }}" class="active">Groups</a>
+            <a href="{{ url_for('profile_page') }}">Profile</a>
+        </div>
+    </nav>
+
+    <main>
+        <div class="greeting">
+            <h1>Your <span class="purple">Groups</span></h1>
+            <button class="new-group-btn" onclick="showCreateGroupModal()">+ Create New Group</button>
+        </div>
+
+        <div class="groups-container">
+            <div class="groups-list" id="groups-list">
+                <!-- Groups will be added here dynamically -->
+            </div>
+        </div>
+    </main>
+
+    <!-- Create Group Modal -->
+    <div id="create-group-modal" class="modal">
+        <div class="modal-content">
+            <h2>Create New Group</h2>
+            <form id="create-group-form" onsubmit="createGroup(event)">
+                <div class="form-group">
+                    <label for="group-name">Group Name</label>
+                    <input type="text" id="group-name" required>
+                </div>
+                <div class="form-group">
+                    <label for="group-description">Description</label>
+                    <textarea id="group-description"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Add Members</label>
+                    <div id="members-list">
+                        <!-- Members will be added here -->
+                    </div>
+                    <div class="add-member-section">
+                        <input type="text" id="member-search" placeholder="Search users...">
+                        <div id="search-results"></div>
+                    </div>
+                </div>
+                <div class="modal-buttons">
+                    <button type="button" onclick="closeCreateGroupModal()">Cancel</button>
+                    <button type="submit">Create Group</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Group Detail Modal -->
+    <div id="group-detail-modal" class="modal">
+        <div class="modal-content">
+            <button class="close-modal-btn" onclick="closeGroupDetailModal()">×</button>
+            <h2 id="group-detail-name"></h2>
+            <p id="group-detail-description"></p>
+            
+            <div class="group-tabs">
+                <button class="tab-btn active" onclick="showTab('expenses')">Expenses</button>
+                <button class="tab-btn" onclick="showTab('members')">Members</button>
+                <button class="tab-btn" onclick="showTab('settings')">Settings</button>
+                <button class="tab-btn" onclick="showTab('settle')">Settle</button>
+            </div>
+
+            <div id="expenses-tab" class="tab-content active">
+                <button class="add-expense-btn" onclick="showAddExpenseModal()">+ Add Expense</button>
+                <div class="expenses-list" id="group-expenses-list">
+                    <!-- Expenses will be added here -->
+                </div>
+            </div>
+
+            <div id="members-tab" class="tab-content">
+                <div class="members-list" id="group-members-list">
+                    <!-- Members will be added here -->
+                </div>
+            </div>
+
+            <div id="settings-tab" class="tab-content">
+                <form id="group-settings-form" onsubmit="updateGroupSettings(event)">
+                    <div class="form-group">
+                        <label for="edit-group-name">Group Name</label>
+                        <input type="text" id="edit-group-name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-group-description">Description</label>
+                        <textarea id="edit-group-description"></textarea>
+                    </div>
+                    <div class="modal-buttons">
+                        <button type="button" onclick="closeGroupDetailModal()">Close</button>
+                        <button type="submit">Save Changes</button>
+                    </div>
+                </form>
+            </div>
+
+            <div id="settle-tab" class="tab-content">
+                <div class="settle-summary" id="settle-summary">
+                    <!-- Settlement summary will be added here -->
+                </div>
+                <div class="settle-actions">
+                    <button onclick="showSettleModal()">Settle Up</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settle Modal -->
+    <div id="settle-modal" class="modal">
+        <div class="modal-content">
+            <button class="close-modal-btn" onclick="closeSettleModal()">×</button>
+            <h2>Settle Up</h2>
+            <div id="settle-details">
+                <!-- Settlement details will be added here -->
+            </div>
+            <div class="modal-buttons">
+                <button onclick="closeSettleModal()">Cancel</button>
+                <button onclick="confirmSettlement()">Confirm Settlement</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Expense Modal -->
+    <div id="add-expense-modal" class="modal">
+        <div class="modal-content">
+            <h2>Add Expense</h2>
+            <form id="add-expense-form" onsubmit="addExpense(event)">
+                <div class="form-group">
+                    <label for="expense-amount">Amount</label>
+                    <input type="number" id="expense-amount" required min="0" step="0.01">
+                </div>
+                <div class="form-group">
+                    <label for="expense-description">Description</label>
+                    <input type="text" id="expense-description" required>
+                </div>
+                <div class="form-group">
+                    <label for="expense-category">Category</label>
+                    <select id="expense-category" required>
+                        <option value="">Select a category</option>
+                        <option value="Food">Food</option>
+                        <option value="Transport">Transport</option>
+                        <option value="Rent">Rent</option>
+                        <option value="Utilities">Utilities</option>
+                        <option value="Shopping">Shopping</option>
+                        <option value="Entertainment">Entertainment</option>
+                        <option value="Healthcare">Healthcare</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="split-equally" checked>
+                        Split equally among all members
+                    </label>
+                </div>
+                <div id="custom-splits" style="display: none;">
+                    <h4>Custom Splits</h4>
+                    <div class="custom-splits-list" id="custom-splits-list">
+                        <!-- Custom splits will be added here -->
+                    </div>
+                </div>
+                <div class="modal-buttons">
+                    <button type="button" onclick="closeAddExpenseModal()">Cancel</button>
+                    <button type="submit">Add Expense</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Load groups on page load
+        document.addEventListener('DOMContentLoaded', loadGroups);
+
+        function loadGroups() {
+            fetch('/api/groups')
+                .then(response => response.json())
+                .then(groups => {
+                    const groupsList = document.getElementById('groups-list');
+                    groupsList.innerHTML = '';
+                    
+                    if (groups.length === 0) {
+                        groupsList.innerHTML = `
+                            <div class="no-groups">
+                                <p>You haven't joined any groups yet.</p>
+                                <button onclick="showCreateGroupModal()">Create Your First Group</button>
+                            </div>
+                        `;
+                        return;
+                    }
+                    
+                    groups.forEach(group => {
+                        const groupCard = document.createElement('div');
+                        groupCard.className = 'group-card';
+                        groupCard.innerHTML = `
+                            <h3>${group.name}</h3>
+                            <p>${group.description || 'No description'}</p>
+                            <div class="group-info">
+                                <span>${group.member_count} members</span>
+                                <span>Created: ${new Date(group.created_at).toLocaleDateString()}</span>
+                            </div>
+                            <button onclick="viewGroup(${group.id})">View Group</button>
+                        `;
+                        groupsList.appendChild(groupCard);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error loading groups:', error);
+                    const groupsList = document.getElementById('groups-list');
+                    groupsList.innerHTML = `
+                        <div class="error-message">
+                            <p>Error loading groups. Please try again.</p>
+                            <button onclick="loadGroups()">Retry</button>
+                        </div>
+                    `;
+                });
+        }
+
+        function showCreateGroupModal() {
+            showModal('create-group-modal');
+        }
+
+        function closeCreateGroupModal() {
+            closeModal('create-group-modal');
+            document.getElementById('create-group-form').reset();
+            document.getElementById('members-list').innerHTML = '';
+        }
+
+        function createGroup(event) {
+            event.preventDefault();
+            
+            const name = document.getElementById('group-name').value;
+            const description = document.getElementById('group-description').value;
+            const members = Array.from(document.querySelectorAll('.member-item')).map(item => 
+                parseInt(item.dataset.userId)
+            );
+
+            fetch('/api/groups', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    name,
+                    description,
+                    members
+                })
+            })
+            .then(response => response.json())
+            .then(() => {
+                closeCreateGroupModal();
+                loadGroups();
+            });
+        }
+
+        function viewGroup(groupId) {
+            fetch(`/api/groups/${groupId}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Failed to fetch group details');
+                    }
+                    return response.json();
+                })
+                .then(group => {
+                    document.getElementById('group-detail-name').textContent = group.name;
+                    document.getElementById('group-detail-description').textContent = group.description || 'No description';
+                    document.getElementById('edit-group-name').value = group.name;
+                    document.getElementById('edit-group-description').value = group.description || '';
+                    
+                    // Update members list
+                    const membersList = document.getElementById('group-members-list');
+                    membersList.innerHTML = group.members.map(member => `
+                        <div class="member-item">
+                            <span>${member.name} (${member.username})</span>
+                            ${member.is_admin ? '<span class="admin-badge">Admin</span>' : ''}
+                        </div>
+                    `).join('');
+                    
+                    // Update expenses list
+                    const expensesList = document.getElementById('group-expenses-list');
+                    if (group.expenses.length === 0) {
+                        expensesList.innerHTML = `
+                            <div class="no-expenses">
+                                <p>No expenses added yet.</p>
+                                <button onclick="showAddExpenseModal()">Add First Expense</button>
+                            </div>
+                        `;
+                    } else {
+                        // Sort expenses by date in descending order (newest first)
+                        const sortedExpenses = [...group.expenses].sort((a, b) => 
+                            new Date(b.date) - new Date(a.date)
+                        );
+                        
+                        expensesList.innerHTML = sortedExpenses.map(expense => `
+                            <div class="expense-item ${expense.category === 'Settlement' ? 'settlement-expense' : ''}">
+                                <div class="expense-info">
+                                    <h4>${expense.description}</h4>
+                                    <span class="amount">₹${expense.amount}</span>
+                                </div>
+                                <div class="expense-details">
+                                    <span>Paid by: ${expense.paid_by}</span>
+                                    <span>Date: ${new Date(expense.date).toLocaleString('en-IN', {
+                                        day: 'numeric',
+                                        month: 'short',
+                                        year: 'numeric',
+                                        hour: '2-digit',
+                                        minute: '2-digit'
+                                    })}</span>
+                                    <span>Category: ${expense.category}</span>
+                                </div>
+                                ${expense.category !== 'Settlement' ? `
+                                    <div class="expense-splits">
+                                        <h5>Splits:</h5>
+                                        ${expense.splits.map(split => `
+                                            <div class="split-detail">
+                                                <span>${split.username}</span>
+                                                <span class="${split.is_paid ? 'paid' : 'unpaid'}">
+                                                    ₹${split.amount} ${split.is_paid ? '(Paid)' : '(Unpaid)'}
+                                                </span>
+                                            </div>
+                                        `).join('')}
+                                    </div>
+                                ` : ''}
+                            </div>
+                        `).join('');
+                    }
+                    
+                    // Update settle tab
+                    updateSettleSummary(group);
+                    
+                    // Store current group ID
+                    document.getElementById('group-detail-modal').dataset.groupId = groupId;
+                    
+                    // Show the modal
+                    document.getElementById('group-detail-modal').style.display = 'flex';
+                    document.body.classList.add('modal-open');
+                })
+                .catch(error => {
+                    console.error('Error viewing group:', error);
+                    alert('Failed to load group details. Please try again.');
+                });
+        }
+
+        function closeGroupDetailModal() {
+            closeModal('group-detail-modal');
+        }
+
+        function showTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Show selected tab
+            document.getElementById(`${tabName}-tab`).classList.add('active');
+            document.querySelector(`.tab-btn[onclick="showTab('${tabName}')"]`).classList.add('active');
+        }
+
+        function showAddExpenseModal() {
+            const groupId = document.getElementById('group-detail-modal').dataset.groupId;
+            const modal = document.getElementById('add-expense-modal');
+            modal.dataset.groupId = groupId;
+            showModal('add-expense-modal');
+        }
+
+        function closeAddExpenseModal() {
+            closeModal('add-expense-modal');
+            document.getElementById('add-expense-form').reset();
+            document.getElementById('custom-splits').style.display = 'none';
+            document.getElementById('custom-splits-list').innerHTML = '';
+        }
+
+        function addExpense(event) {
+            event.preventDefault();
+            
+            const groupId = document.getElementById('add-expense-modal').dataset.groupId;
+            const amount = document.getElementById('expense-amount').value;
+            const description = document.getElementById('expense-description').value;
+            const category = document.getElementById('expense-category').value;
+            const splitEqually = document.getElementById('split-equally').checked;
+            
+            let customSplits = {};
+            if (!splitEqually) {
+                const splitInputs = document.querySelectorAll('.custom-split-input');
+                let totalSplit = 0;
+                
+                splitInputs.forEach(input => {
+                    const splitAmount = parseFloat(input.value) || 0;
+                    customSplits[input.dataset.userId] = splitAmount;
+                    totalSplit += splitAmount;
+                });
+                
+                // Validate that custom splits sum up to the total amount
+                if (Math.abs(totalSplit - parseFloat(amount)) > 0.01) {
+                    alert('Custom splits must sum up to the total amount');
+                    return;
+                }
+            }
+
+            fetch(`/api/groups/${groupId}/expenses`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    amount: parseFloat(amount),
+                    description: description,
+                    category: category,
+                    split_equally: splitEqually,
+                    custom_splits: customSplits
+                })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(data => {
+                        throw new Error(data.error || 'Failed to add expense');
+                    });
+                }
+                return response.json();
+            })
+            .then(() => {
+                closeAddExpenseModal();
+                viewGroup(groupId); // Refresh the group view
+            })
+            .catch(error => {
+                console.error('Error adding expense:', error);
+                alert(error.message || 'Failed to add expense. Please try again.');
+            });
+        }
+
+        function updateGroupSettings(event) {
+            event.preventDefault();
+            
+            const groupId = document.getElementById('group-detail-modal').dataset.groupId;
+            const name = document.getElementById('edit-group-name').value;
+            const description = document.getElementById('edit-group-description').value;
+            
+            fetch(`/api/groups/${groupId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    name,
+                    description
+                })
+            })
+            .then(response => response.json())
+            .then(() => {
+                viewGroup(groupId);
+            });
+        }
+
+        // Search users for adding to group
+        document.getElementById('member-search').addEventListener('input', function(e) {
+            const query = e.target.value;
+            if (query.length < 2) {
+                document.getElementById('search-results').innerHTML = '';
+                return;
+            }
+            
+            fetch(`/api/users/search?q=${query}`)
+                .then(response => response.json())
+                .then(users => {
+                    const results = document.getElementById('search-results');
+                    results.innerHTML = users.map(user => `
+                        <div class="search-result-item" onclick="addMember(${user.id}, '${user.username}')">
+                            ${user.username} (${user.name})
+                        </div>
+                    `).join('');
+                });
+        });
+
+        function addMember(userId, username) {
+            const membersList = document.getElementById('members-list');
+            if (!membersList.querySelector(`[data-user-id="${userId}"]`)) {
+                const memberItem = document.createElement('div');
+                memberItem.className = 'member-item';
+                memberItem.dataset.userId = userId;
+                memberItem.innerHTML = `
+                    <span>${username}</span>
+                    <button onclick="removeMember(this)">Remove</button>
+                `;
+                membersList.appendChild(memberItem);
+            }
+            document.getElementById('member-search').value = '';
+            document.getElementById('search-results').innerHTML = '';
+        }
+
+        function removeMember(button) {
+            button.parentElement.remove();
+        }
+
+        // Handle split equally checkbox
+        document.getElementById('split-equally').addEventListener('change', function() {
+            const customSplitsDiv = document.getElementById('custom-splits');
+            if (!this.checked) {
+                customSplitsDiv.style.display = 'block';
+                // Get group members and create split inputs
+                const groupId = document.getElementById('add-expense-modal').dataset.groupId;
+                fetch(`/api/groups/${groupId}`)
+                    .then(response => response.json())
+                    .then(group => {
+                        const customSplitsList = document.getElementById('custom-splits-list');
+                        customSplitsList.innerHTML = group.members.map(member => `
+                            <div class="split-item">
+                                <span>${member.name}</span>
+                                <input type="number" 
+                                       class="custom-split-input" 
+                                       data-user-id="${member.id}"
+                                       min="0" 
+                                       step="0.01" 
+                                       required
+                                       placeholder="Enter amount">
+                            </div>
+                        `).join('');
+                    });
+            } else {
+                customSplitsDiv.style.display = 'none';
+                document.getElementById('custom-splits-list').innerHTML = '';
+            }
+        });
+
+        function updateSettleSummary(group) {
+            const settleSummary = document.getElementById('settle-summary');
+            const balances = calculateBalances(group);
+            
+            let summaryHTML = '<h3>Current Balances</h3>';
+            let settlements = [];
+            
+            // Calculate who owes whom
+            const debtors = Object.entries(balances)
+                .filter(([_, amount]) => amount < 0)
+                .sort((a, b) => a[1] - b[1]);
+            
+            const creditors = Object.entries(balances)
+                .filter(([_, amount]) => amount > 0)
+                .sort((a, b) => b[1] - a[1]);
+            
+            let i = 0, j = 0;
+            while (i < debtors.length && j < creditors.length) {
+                const [debtor, debt] = debtors[i];
+                const [creditor, credit] = creditors[j];
+                const amount = Math.min(-debt, credit);
+                
+                if (amount > 0.01) { // Ignore very small amounts
+                    settlements.push({
+                        from: debtor,
+                        to: creditor,
+                        amount: amount
+                    });
+                }
+                
+                if (-debt > credit) {
+                    debtors[i][1] += amount;
+                    j++;
+                } else {
+                    creditors[j][1] -= amount;
+                    i++;
+                }
+            }
+            
+            summaryHTML += '<div class="balances-list">';
+            Object.entries(balances).forEach(([username, amount]) => {
+                const color = amount > 0 ? 'green' : amount < 0 ? 'red' : 'gray';
+                summaryHTML += `
+                    <div class="balance-item">
+                        <span>${username}</span>
+                        <span class="${color}">₹${Math.abs(amount).toFixed(2)} ${amount > 0 ? 'gets back' : 'owes'}</span>
+                    </div>
+                `;
+            });
+            summaryHTML += '</div>';
+            
+            if (settlements.length > 0) {
+                summaryHTML += '<h3>Suggested Settlements</h3><div class="settlements-list">';
+                settlements.forEach(s => {
+                    summaryHTML += `
+                        <div class="settlement-item">
+                            <span>${s.from}</span>
+                            <span>→</span>
+                            <span>${s.to}</span>
+                            <span class="amount">₹${s.amount.toFixed(2)}</span>
+                        </div>
+                    `;
+                });
+                summaryHTML += '</div>';
+            }
+            
+            settleSummary.innerHTML = summaryHTML;
+        }
+
+        function calculateBalances(group) {
+            const balances = {};
+            
+            // Initialize balances for all members
+            group.members.forEach(member => {
+                balances[member.username] = 0;
+            });
+            
+            // Calculate balances from expenses
+            group.expenses.forEach(expense => {
+                const paidBy = expense.paid_by;
+                balances[paidBy] = (balances[paidBy] || 0) + expense.amount;
+                
+                expense.splits.forEach(split => {
+                    balances[split.username] = (balances[split.username] || 0) - split.amount;
+                });
+            });
+            
+            return balances;
+        }
+
+        function showSettleModal() {
+            const groupId = document.getElementById('group-detail-modal').dataset.groupId;
+            const modal = document.getElementById('settle-modal');
+            modal.dataset.groupId = groupId;
+            
+            // Get the current group data
+            fetch(`/api/groups/${groupId}`)
+                .then(response => response.json())
+                .then(group => {
+                    const balances = calculateBalances(group);
+                    const settlements = calculateSettlements(balances);
+                    
+                    const settleDetails = document.getElementById('settle-details');
+                    settleDetails.innerHTML = `
+                        <h3>Confirm Settlement</h3>
+                        <div class="settlement-confirmation">
+                            ${settlements.map(s => `
+                                <div class="settlement-confirm-item">
+                                    <span>${s.from} → ${s.to}</span>
+                                    <span class="amount">₹${s.amount.toFixed(2)}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                        <p class="settlement-note">This will create settlement transactions in the group.</p>
+                    `;
+                    
+                    showModal('settle-modal');
+                })
+                .catch(error => {
+                    console.error('Error preparing settlement:', error);
+                    alert('Failed to prepare settlement. Please try again.');
+                });
+        }
+
+        function confirmSettlement() {
+            const groupId = document.getElementById('settle-modal').dataset.groupId;
+            
+            // Get the current group data
+            fetch(`/api/groups/${groupId}`)
+                .then(response => response.json())
+                .then(group => {
+                    const balances = calculateBalances(group);
+                    const settlements = calculateSettlements(balances);
+                    
+                    // Send settlement data to the server
+                    fetch(`/api/groups/${groupId}/settle`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            settlements: settlements
+                        })
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Failed to record settlement');
+                        }
+                        return response.json();
+                    })
+                    .then(() => {
+                        closeSettleModal();
+                        viewGroup(groupId); // Refresh the group view
+                    })
+                    .catch(error => {
+                        console.error('Error confirming settlement:', error);
+                        alert('Failed to record settlement. Please try again.');
+                    });
+                });
+        }
+
+        function calculateSettlements(balances) {
+            const settlements = [];
+            
+            // Calculate who owes whom
+            const debtors = Object.entries(balances)
+                .filter(([_, amount]) => amount < 0)
+                .sort((a, b) => a[1] - b[1]);
+            
+            const creditors = Object.entries(balances)
+                .filter(([_, amount]) => amount > 0)
+                .sort((a, b) => b[1] - a[1]);
+            
+            let i = 0, j = 0;
+            while (i < debtors.length && j < creditors.length) {
+                const [debtor, debt] = debtors[i];
+                const [creditor, credit] = creditors[j];
+                const amount = Math.min(-debt, credit);
+                
+                if (amount > 0.01) { // Ignore very small amounts
+                    settlements.push({
+                        from: debtor,
+                        to: creditor,
+                        amount: amount
+                    });
+                }
+                
+                if (-debt > credit) {
+                    debtors[i][1] += amount;
+                    j++;
+                } else {
+                    creditors[j][1] -= amount;
+                    i++;
+                }
+            }
+            
+            return settlements;
+        }
+
+        // Add CSS for new elements
+        const style = document.createElement('style');
+        style.textContent = `
+            .modal {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background-color: rgba(0, 0, 0, 0.5);
+                display: none;
+                justify-content: center;
+                align-items: center;
+                z-index: 1000;
+            }
+
+            .modal-content {
+                background-color: white;
+                padding: 20px;
+                border-radius: 8px;
+                width: 90%;
+                max-width: 600px;
+                position: relative;
+                margin: 20px 0;
+            }
+
+            .groups-container {
+                padding: 20px;
+            }
+
+            .groups-list {
+                display: grid;
+                grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+                gap: 20px;
+                padding: 20px;
+            }
+
+            .group-card {
+                background-color: white;
+                padding: 20px;
+                border-radius: 8px;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            }
+
+            .tab-content {
+                padding: 10px;
+            }
+
+            .expenses-list {
+                max-height: 400px;
+                overflow-y: auto;
+                padding: 10px;
+            }
+
+            .members-list {
+                padding: 10px;
+            }
+
+            .settle-summary {
+                padding: 10px;
+                background-color: #f8f9fa;
+                border-radius: 8px;
+                margin-bottom: 20px;
+            }
+
+            .balances-list, .settlements-list {
+                margin: 15px 0;
+            }
+
+            .balance-item, .settlement-item {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 10px;
+                border-bottom: 1px solid #eee;
+                background-color: white;
+                border-radius: 4px;
+                margin-bottom: 8px;
+            }
+
+            .balance-item:last-child, .settlement-item:last-child {
+                border-bottom: none;
+            }
+
+            .green {
+                color: #28a745;
+            }
+
+            .red {
+                color: #dc3545;
+            }
+
+            .gray {
+                color: #6c757d;
+            }
+
+            .settle-actions {
+                margin-top: 20px;
+                text-align: center;
+            }
+
+            .settle-actions button {
+                padding: 10px 20px;
+                background-color: #6c5ce7;
+                color: white;
+                border: none;
+                border-radius: 5px;
+                cursor: pointer;
+                font-size: 1em;
+                transition: background-color 0.3s;
+            }
+
+            .settle-actions button:hover {
+                background-color: #5b4bc4;
+            }
+
+            .settlement-confirmation {
+                margin: 20px 0;
+                padding: 15px;
+                background-color: #f8f9fa;
+                border-radius: 5px;
+            }
+
+            .settlement-confirm-item {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 10px;
+                border-bottom: 1px solid #eee;
+                background-color: white;
+                border-radius: 4px;
+                margin-bottom: 8px;
+            }
+
+            .settlement-confirm-item:last-child {
+                border-bottom: none;
+            }
+
+            .settlement-note {
+                margin-top: 15px;
+                color: #6c757d;
+                font-size: 0.9em;
+                text-align: center;
+            }
+
+            /* Ensure the body doesn't scroll when modal is open */
+            body.modal-open {
+                overflow: hidden;
+            }
+        `;
+        document.head.appendChild(style);
+
+        // Add event listeners to handle body scroll when modal is open
+        function showModal(modalId) {
+            document.body.classList.add('modal-open');
+            document.getElementById(modalId).style.display = 'flex';
+        }
+
+        function closeModal(modalId) {
+            document.body.classList.remove('modal-open');
+            document.getElementById(modalId).style.display = 'none';
+        }
+    </script>
+</body>
+</html> 
