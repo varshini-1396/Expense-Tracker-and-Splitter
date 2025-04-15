@@ -644,7 +644,7 @@ def settle_group(group_id):
                 description=f"Settlement: {settlement['from']} → {settlement['to']}",
                 category='Settlement',
                 date=datetime.utcnow(),
-                paid_by=from_user.id,  # Use user ID instead of username
+                paid_by=from_user.id,
                 split_equally=False
             )
             db.session.add(expense)
@@ -653,7 +653,7 @@ def settle_group(group_id):
             # Create the splits
             split = ExpenseSplit(
                 expense_id=expense.id,
-                user_id=to_user.id,  # Use user ID instead of username
+                user_id=to_user.id,
                 amount=settlement['amount'],
                 is_paid=True
             )

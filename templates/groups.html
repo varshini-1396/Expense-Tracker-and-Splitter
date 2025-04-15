@@ -650,18 +650,28 @@
                     const settlements = calculateSettlements(balances);
                     
                     const settleDetails = document.getElementById('settle-details');
-                    settleDetails.innerHTML = `
-                        <h3>Confirm Settlement</h3>
-                        <div class="settlement-confirmation">
-                            ${settlements.map(s => `
-                                <div class="settlement-confirm-item">
-                                    <span>${s.from} → ${s.to}</span>
-                                    <span class="amount">₹${s.amount.toFixed(2)}</span>
-                                </div>
-                            `).join('')}
-                        </div>
-                        <p class="settlement-note">This will create settlement transactions in the group.</p>
-                    `;
+                    if (settlements.length === 0) {
+                        settleDetails.innerHTML = `
+                            <div class="no-settlements">
+                                <p>No settlements needed. All balances are settled!</p>
+                            </div>
+                        `;
+                        document.querySelector('.modal-buttons').style.display = 'none';
+                    } else {
+                        settleDetails.innerHTML = `
+                            <h3>Confirm Settlement</h3>
+                            <div class="settlement-confirmation">
+                                ${settlements.map(s => `
+                                    <div class="settlement-confirm-item">
+                                        <span>${s.from} → ${s.to}</span>
+                                        <span class="amount">₹${s.amount.toFixed(2)}</span>
+                                    </div>
+                                `).join('')}
+                            </div>
+                            <p class="settlement-note">This will create settlement transactions in the group.</p>
+                        `;
+                        document.querySelector('.modal-buttons').style.display = 'flex';
+                    }
                     
                     showModal('settle-modal');
                 })
@@ -693,17 +703,20 @@
                     })
                     .then(response => {
                         if (!response.ok) {
-                            throw new Error('Failed to record settlement');
+                            return response.json().then(data => {
+                                throw new Error(data.error || 'Failed to record settlement');
+                            });
                         }
                         return response.json();
                     })
                     .then(() => {
                         closeSettleModal();
                         viewGroup(groupId); // Refresh the group view
+                        alert('Settlement recorded successfully!');
                     })
                     .catch(error => {
                         console.error('Error confirming settlement:', error);
-                        alert('Failed to record settlement. Please try again.');
+                        alert(error.message || 'Failed to record settlement. Please try again.');
                     });
                 });
         }
@@ -744,6 +757,10 @@
             }
             
             return settlements;
+        }
+
+        function closeSettleModal() {
+            closeModal('settle-modal');
         }
 
         function leaveGroup() {
