@@ -940,26 +940,22 @@ td.outgoing {
 
 .charts-container {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 2rem;
-    margin-top: 2rem;
-}
-
-.chart-card {
-    height: 300px;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin: 20px 0;
 }
 
 .chart-wrapper {
     background: white;
     border-radius: 10px;
-    padding: 1.5rem;
+    padding: 20px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.chart-wrapper h2 {
-    margin-bottom: 1rem;
-    color: #333;
-    font-size: 1.2rem;
+.chart-container {
+    position: relative;
+    height: 300px;
+    width: 100%;
 }
 
 .transactions-list {
@@ -1023,8 +1019,8 @@ td.outgoing {
         grid-template-columns: 1fr;
     }
 
-    .chart-wrapper {
-        padding: 1rem;
+    .chart-container {
+        height: 250px;
     }
 
     .transactions-list {
