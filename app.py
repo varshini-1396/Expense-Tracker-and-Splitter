@@ -233,7 +233,7 @@ def transactions_page():
         db.session.commit()
         return jsonify({'message': 'Transaction added successfully'})
     
-    transactions = Transaction.query.filter_by(user_id=current_user.id).all()
+    transactions = Transaction.query.filter_by(user_id=current_user.id).order_by(Transaction.date.desc()).all()
     return jsonify([{
         'id': t.id,
         'amount': t.amount,
