@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MoneyMate - Statistics</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css', v=1) }}">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
 </head>
 <body>
     <nav class="navbar">
@@ -53,7 +53,7 @@
                 <div class="stats-card chart-card">
                     <h2>Expense Distribution</h2>
                     <div class="chart-wrapper">
-                        <canvas id="category-chart"></canvas>
+                        <canvas id="expenseDistributionChart"></canvas>
                     </div>
                 </div>
 
@@ -61,7 +61,7 @@
                 <div class="stats-card chart-card">
                     <h2>Monthly Trends</h2>
                     <div class="chart-wrapper">
-                        <canvas id="monthly-chart"></canvas>
+                        <canvas id="monthlyTrendsChart"></canvas>
                     </div>
                 </div>
             </div>
@@ -119,28 +119,21 @@
         }
 
         function updateCharts(data) {
-            // Update Category Distribution Chart
-            const categoryCtx = document.getElementById('category-chart').getContext('2d');
-            const categories = Object.keys(data.category_totals);
-            const outgoingData = categories.map(cat => data.category_totals[cat].outgoing);
-            const groupOutgoingData = categories.map(cat => data.category_totals[cat].group_outgoing);
-
-            if (categoryChart) {
-                categoryChart.destroy();
+            // Update expense distribution chart
+            const ctx1 = document.getElementById('expenseDistributionChart').getContext('2d');
+            if (window.expenseChart) {
+                window.expenseChart.destroy();
             }
-
-            categoryChart = new Chart(categoryCtx, {
-                type: 'pie',
+            window.expenseChart = new Chart(ctx1, {
+                type: 'doughnut',
                 data: {
-                    labels: categories,
+                    labels: data.category_totals.map(c => c.category),
                     datasets: [{
-                        label: 'Personal Expenses',
-                        data: outgoingData,
-                        backgroundColor: 'rgba(255, 99, 132, 0.7)'
-                    }, {
-                        label: 'Group Expenses',
-                        data: groupOutgoingData,
-                        backgroundColor: 'rgba(54, 162, 235, 0.7)'
+                        data: data.category_totals.map(c => c.total),
+                        backgroundColor: [
+                            '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF',
+                            '#FF9F40', '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0'
+                        ]
                     }]
                 },
                 options: {
@@ -148,67 +141,44 @@
                     maintainAspectRatio: false,
                     plugins: {
                         legend: {
-                            position: 'bottom',
-                            labels: {
-                                boxWidth: 12,
-                                padding: 20
-                            }
+                            position: 'right'
                         }
                     }
                 }
             });
 
-            // Update Monthly Trends Chart
-            const monthlyCtx = document.getElementById('monthly-chart').getContext('2d');
-            const months = Object.keys(data.monthly_totals).sort();
-            const monthlyIncoming = months.map(month => data.monthly_totals[month].incoming);
-            const monthlyOutgoing = months.map(month => data.monthly_totals[month].outgoing);
-            const monthlyGroupOutgoing = months.map(month => data.monthly_totals[month].group_outgoing);
-
-            if (monthlyChart) {
-                monthlyChart.destroy();
+            // Update monthly trends chart
+            const ctx2 = document.getElementById('monthlyTrendsChart').getContext('2d');
+            if (window.trendsChart) {
+                window.trendsChart.destroy();
             }
-
-            monthlyChart = new Chart(monthlyCtx, {
-                type: 'bar',
+            window.trendsChart = new Chart(ctx2, {
+                type: 'line',
                 data: {
-                    labels: months,
+                    labels: data.monthly_totals.map(m => m.month),
                     datasets: [{
                         label: 'Income',
-                        data: monthlyIncoming,
-                        backgroundColor: 'rgba(75, 192, 192, 0.7)'
+                        data: data.monthly_totals.map(m => m.income),
+                        borderColor: '#4BC0C0',
+                        fill: false
                     }, {
-                        label: 'Personal Expenses',
-                        data: monthlyOutgoing,
-                        backgroundColor: 'rgba(255, 99, 132, 0.7)'
-                    }, {
-                        label: 'Group Expenses',
-                        data: monthlyGroupOutgoing,
-                        backgroundColor: 'rgba(54, 162, 235, 0.7)'
+                        label: 'Expenses',
+                        data: data.monthly_totals.map(m => m.expenses),
+                        borderColor: '#FF6384',
+                        fill: false
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    scales: {
-                        x: {
-                            stacked: true,
-                            ticks: {
-                                maxRotation: 45,
-                                minRotation: 45
-                            }
-                        },
-                        y: {
-                            stacked: true
-                        }
-                    },
                     plugins: {
                         legend: {
-                            position: 'bottom',
-                            labels: {
-                                boxWidth: 12,
-                                padding: 20
-                            }
+                            position: 'top'
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true
                         }
                     }
                 }
