@@ -183,6 +183,32 @@
             })
             .catch(error => console.error('Error:', error));
         }
+
+        function settlePayment(expenseId) {
+            if (!confirm('Are you sure you want to mark this settlement as paid?')) {
+                return;
+            }
+
+            fetch(`/api/expenses/${expenseId}/settle`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to settle payment');
+                }
+                return response.json();
+            })
+            .then(() => {
+                loadUpcomingSettlements(); // Refresh the settlements list
+            })
+            .catch(error => {
+                console.error('Error settling payment:', error);
+                alert('Failed to settle payment. Please try again.');
+            });
+        }
     </script>
 </body>
 </html> 

@@ -859,6 +859,62 @@ def get_stats():
         'recent_transactions': all_recent_transactions[:5]
     })
 
+@app.route('/api/upcoming-settlements')
+@login_required
+def upcoming_settlements():
+    try:
+        # Get all group expenses where the user has an unpaid share
+        unpaid_expenses = db.session.query(GroupExpense, ExpenseSplit)\
+            .join(ExpenseSplit, GroupExpense.id == ExpenseSplit.expense_id)\
+            .join(GroupMember, GroupExpense.group_id == GroupMember.group_id)\
+            .filter(GroupMember.user_id == current_user.id)\
+            .filter(ExpenseSplit.user_id == current_user.id)\
+            .filter(ExpenseSplit.is_paid == False)\
+            .order_by(GroupExpense.date.asc())\
+            .all()
+        
+        settlements = []
+        for expense, split in unpaid_expenses:
+            group = Group.query.get(expense.group_id)
+            paid_by = User.query.get(expense.paid_by)
+            
+            settlements.append({
+                'id': expense.id,
+                'title': f"Group: {group.name} - {expense.description}",
+                'amount': split.amount,
+                'due_date': expense.date.isoformat(),
+                'group_id': group.id,
+                'paid_by': paid_by.username
+            })
+        
+        return jsonify(settlements)
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/expenses/<int:expense_id>/settle', methods=['POST'])
+@login_required
+def settle_expense(expense_id):
+    try:
+        # Get the expense split
+        split = ExpenseSplit.query.filter_by(
+            expense_id=expense_id,
+            user_id=current_user.id
+        ).first()
+        
+        if not split:
+            return jsonify({'error': 'Expense split not found'}), 404
+        
+        # Mark as paid
+        split.is_paid = True
+        db.session.commit()
+        
+        return jsonify({'message': 'Payment settled successfully'})
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
 def create_tables():
     try:
         db.create_all()
