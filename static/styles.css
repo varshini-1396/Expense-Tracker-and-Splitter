@@ -876,11 +876,10 @@ td.outgoing {
 .stats-dashboard {
     display: grid;
     grid-template-columns: 1fr;
-    gap: 1.5rem;
-    padding: 1rem;
-    width: 100%;
-    max-width: 100%;
-    overflow-x: hidden;
+    gap: 2rem;
+    padding: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
 }
 
 .stats-card {
@@ -941,10 +940,9 @@ td.outgoing {
 
 .charts-container {
     display: grid;
-    grid-template-columns: 1fr;
-    gap: 1.5rem;
-    width: 100%;
-    max-width: 100%;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+    margin-top: 2rem;
 }
 
 .chart-card {
@@ -952,30 +950,58 @@ td.outgoing {
 }
 
 .chart-wrapper {
-    height: 250px;
-    position: relative;
+    background: white;
+    border-radius: 10px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.table-responsive {
-    overflow-x: auto;
+.chart-wrapper h2 {
+    margin-bottom: 1rem;
+    color: #333;
+    font-size: 1.2rem;
 }
 
-table {
+.transactions-list {
+    background: white;
+    border-radius: 10px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.transactions-list h2 {
+    margin-bottom: 1rem;
+    color: #333;
+    font-size: 1.2rem;
+}
+
+.transactions-list table {
     width: 100%;
     border-collapse: collapse;
-    margin-top: 1rem;
 }
 
-th, td {
+.transactions-list th,
+.transactions-list td {
     padding: 0.75rem;
     text-align: left;
     border-bottom: 1px solid #eee;
 }
 
-th {
-    background: #f8f9fa;
-    font-weight: 500;
+.transactions-list th {
+    font-weight: 600;
     color: #666;
+}
+
+.transactions-list tr:last-child td {
+    border-bottom: none;
+}
+
+.transactions-list .incoming {
+    color: #4CAF50;
+}
+
+.transactions-list .outgoing {
+    color: #F44336;
 }
 
 .error-message {
@@ -990,64 +1016,19 @@ th {
 /* Mobile Responsive Styles */
 @media (max-width: 768px) {
     .stats-dashboard {
-        padding: 10px;
-        grid-template-columns: 1fr;
-        gap: 15px;
-    }
-
-    .stats-card {
-        padding: 15px;
+        padding: 1rem;
     }
 
     .charts-container {
-        display: flex;
-        flex-direction: column;
-        gap: 15px;
-    }
-
-    .chart-card {
-        width: 100%;
-        margin: 0;
+        grid-template-columns: 1fr;
     }
 
     .chart-wrapper {
-        height: 300px;
-        width: 100%;
-        margin: 0 auto;
-        padding: 10px;
+        padding: 1rem;
     }
 
-    .transactions-card {
+    .transactions-list {
         overflow-x: auto;
-    }
-
-    .table-responsive {
-        width: 100%;
-        overflow-x: auto;
-    }
-
-    table {
-        min-width: 100%;
-        font-size: 14px;
-    }
-
-    th, td {
-        padding: 8px;
-        white-space: nowrap;
-    }
-
-    .balance-card .transactions {
-        flex-direction: column;
-        gap: 10px;
-    }
-
-    .incoming, .outgoing {
-        width: 100%;
-    }
-
-    .expense-breakdown {
-        flex-direction: column;
-        gap: 5px;
     }
 }
 

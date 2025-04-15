@@ -174,7 +174,7 @@
         });
 
         function loadTransactions() {
-            fetch('https://expense-tracker-and-splitter-production.up.railway.app/api/transactions')
+            fetch('/api/transactions')
                 .then(response => {
                     if (!response.ok) {
                         throw new Error('Network response was not ok');
@@ -228,7 +228,7 @@
             const typeFilter = document.getElementById('type-filter').value;
             const sortBy = document.getElementById('sort-by').value;
 
-            fetch('https://expense-tracker-and-splitter-production.up.railway.app/api/transactions')
+            fetch('/api/transactions')
                 .then(response => {
                     if (!response.ok) {
                         throw new Error('Network response was not ok');
@@ -301,7 +301,7 @@
             const category = document.getElementById('edit-category').value;
             const type = document.getElementById('edit-transaction-type').value;
 
-            fetch(`https://expense-tracker-and-splitter-production.up.railway.app/api/transactions/${id}`, {
+            fetch(`/api/transactions/${id}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -336,7 +336,7 @@
 
             const id = document.getElementById('edit-transaction-id').value;
 
-            fetch(`https://expense-tracker-and-splitter-production.up.railway.app/api/transactions/${id}`, {
+            fetch(`/api/transactions/${id}`, {
                 method: 'DELETE'
             })
             .then(response => {
@@ -372,7 +372,7 @@
             const category = document.getElementById('category').value;
             const type = document.getElementById('type').value;
 
-            fetch('https://expense-tracker-and-splitter-production.up.railway.app/api/transactions', {
+            fetch('/api/transactions', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

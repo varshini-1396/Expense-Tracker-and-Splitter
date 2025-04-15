@@ -21,115 +21,108 @@
 
     <main>
         <div class="greeting">
-            <h1>Your <span class="purple">Financial Statistics</span></h1>
+            <h1>Your <span class="purple">Statistics</span></h1>
         </div>
 
         <div class="stats-dashboard">
-            <!-- Balance Overview Card -->
-            <div class="stats-card balance-card">
+            <div class="balance-card">
                 <h2>Total Balance</h2>
-                <div class="amount" id="total-balance">₹0</div>
-                
+                <div id="total-balance">Loading...</div>
                 <div class="transactions">
                     <div class="incoming">
-                        <span class="arrow up">▲</span> Total Income
-                        <div class="amount" id="total-income">+₹0</div>
+                        <span class="arrow up">↑</span>
+                        <span>Incoming</span>
+                        <div id="total-incoming">Loading...</div>
                     </div>
-                    
                     <div class="outgoing">
-                        <span class="arrow down">▼</span> Total Expenses
-                        <div class="amount" id="total-expenses">-₹0</div>
-                        <div class="expense-breakdown">
-                            <span>Personal: <span id="personal-expenses">₹0</span></span>
-                            <span>Group: <span id="group-expenses">₹0</span></span>
-                        </div>
+                        <span class="arrow down">↓</span>
+                        <span>Outgoing</span>
+                        <div id="total-outgoing">Loading...</div>
                     </div>
                 </div>
             </div>
 
-            <!-- Charts Section -->
             <div class="charts-container">
-                <!-- Category Distribution Chart -->
-                <div class="stats-card chart-card">
+                <div class="chart-wrapper">
                     <h2>Expense Distribution</h2>
-                    <div class="chart-wrapper">
-                        <canvas id="expenseDistributionChart"></canvas>
-                    </div>
+                    <canvas id="expenseDistributionChart"></canvas>
                 </div>
-
-                <!-- Monthly Trends Chart -->
-                <div class="stats-card chart-card">
+                <div class="chart-wrapper">
                     <h2>Monthly Trends</h2>
-                    <div class="chart-wrapper">
-                        <canvas id="monthlyTrendsChart"></canvas>
-                    </div>
+                    <canvas id="monthlyTrendsChart"></canvas>
                 </div>
             </div>
 
-            <!-- Recent Transactions -->
-            <div class="stats-card transactions-card">
+            <div class="transactions-list">
                 <h2>Recent Transactions</h2>
-                <div class="table-responsive">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Date</th>
-                                <th>Description</th>
-                                <th>Category</th>
-                                <th>Amount</th>
-                                <th>Type</th>
-                            </tr>
-                        </thead>
-                        <tbody id="recent-transactions-table">
-                            <!-- Transactions will be added here dynamically -->
-                        </tbody>
-                    </table>
-                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Description</th>
+                            <th>Category</th>
+                            <th>Amount</th>
+                            <th>Type</th>
+                        </tr>
+                    </thead>
+                    <tbody id="recent-transactions">
+                        <!-- Transactions will be added here dynamically -->
+                    </tbody>
+                </table>
             </div>
         </div>
     </main>
 
     <script>
-        let categoryChart, monthlyChart;
+        let expenseChart = null;
+        let monthlyChart = null;
 
-        document.addEventListener('DOMContentLoaded', loadStats);
+        document.addEventListener('DOMContentLoaded', function() {
+            loadStats();
+        });
 
         function loadStats() {
             fetch('/api/stats')
-                .then(response => response.json())
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
                 .then(data => {
-                    updateOverview(data);
+                    updateBalance(data);
                     updateCharts(data);
                     updateRecentTransactions(data.recent_transactions);
                 })
                 .catch(error => {
                     console.error('Error loading stats:', error);
-                    showError('Failed to load statistics. Please try again later.');
+                    document.getElementById('total-balance').textContent = 'Error loading data';
                 });
         }
 
-        function updateOverview(data) {
+        function updateBalance(data) {
             document.getElementById('total-balance').textContent = `₹${data.total_balance.toFixed(2)}`;
-            document.getElementById('total-income').textContent = `+₹${data.total_incoming.toFixed(2)}`;
-            document.getElementById('total-expenses').textContent = `-₹${data.total_outgoing.toFixed(2)}`;
-            
-            const personalExpenses = data.total_outgoing - data.total_group_outgoing;
-            document.getElementById('personal-expenses').textContent = `₹${personalExpenses.toFixed(2)}`;
-            document.getElementById('group-expenses').textContent = `₹${data.total_group_outgoing.toFixed(2)}`;
+            document.getElementById('total-incoming').textContent = `+₹${data.total_incoming.toFixed(2)}`;
+            document.getElementById('total-outgoing').textContent = `-₹${data.total_outgoing.toFixed(2)}`;
         }
 
         function updateCharts(data) {
-            // Update expense distribution chart
-            const ctx1 = document.getElementById('expenseDistributionChart').getContext('2d');
-            if (window.expenseChart) {
-                window.expenseChart.destroy();
+            // Destroy existing charts if they exist
+            if (expenseChart) {
+                expenseChart.destroy();
             }
-            window.expenseChart = new Chart(ctx1, {
+            if (monthlyChart) {
+                monthlyChart.destroy();
+            }
+
+            // Create expense distribution chart
+            const expenseCtx = document.getElementById('expenseDistributionChart').getContext('2d');
+            expenseChart = new Chart(expenseCtx, {
                 type: 'doughnut',
                 data: {
-                    labels: data.category_totals.map(c => c.category),
+                    labels: Object.keys(data.category_totals),
                     datasets: [{
-                        data: data.category_totals.map(c => c.total),
+                        data: Object.values(data.category_totals).map(cat => cat.outgoing),
                         backgroundColor: [
                             '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF',
                             '#FF9F40', '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0'
@@ -138,7 +131,6 @@
                 },
                 options: {
                     responsive: true,
-                    maintainAspectRatio: false,
                     plugins: {
                         legend: {
                             position: 'right'
@@ -147,30 +139,26 @@
                 }
             });
 
-            // Update monthly trends chart
-            const ctx2 = document.getElementById('monthlyTrendsChart').getContext('2d');
-            if (window.trendsChart) {
-                window.trendsChart.destroy();
-            }
-            window.trendsChart = new Chart(ctx2, {
+            // Create monthly trends chart
+            const monthlyCtx = document.getElementById('monthlyTrendsChart').getContext('2d');
+            monthlyChart = new Chart(monthlyCtx, {
                 type: 'line',
                 data: {
-                    labels: data.monthly_totals.map(m => m.month),
+                    labels: Object.keys(data.monthly_totals),
                     datasets: [{
-                        label: 'Income',
-                        data: data.monthly_totals.map(m => m.income),
+                        label: 'Incoming',
+                        data: Object.values(data.monthly_totals).map(m => m.incoming),
                         borderColor: '#4BC0C0',
                         fill: false
                     }, {
-                        label: 'Expenses',
-                        data: data.monthly_totals.map(m => m.expenses),
+                        label: 'Outgoing',
+                        data: Object.values(data.monthly_totals).map(m => m.outgoing),
                         borderColor: '#FF6384',
                         fill: false
                     }]
                 },
                 options: {
                     responsive: true,
-                    maintainAspectRatio: false,
                     plugins: {
                         legend: {
                             position: 'top'
@@ -186,9 +174,9 @@
         }
 
         function updateRecentTransactions(transactions) {
-            const tbody = document.getElementById('recent-transactions-table');
+            const tbody = document.getElementById('recent-transactions');
             tbody.innerHTML = '';
-            
+
             if (!transactions || transactions.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">No recent transactions</td></tr>';
                 return;
@@ -205,14 +193,6 @@
                 `;
                 tbody.appendChild(row);
             });
-        }
-
-        function showError(message) {
-            const errorDiv = document.createElement('div');
-            errorDiv.className = 'error-message';
-            errorDiv.textContent = message;
-            document.querySelector('.stats-dashboard').prepend(errorDiv);
-            setTimeout(() => errorDiv.remove(), 5000);
         }
     </script>
 </body>
