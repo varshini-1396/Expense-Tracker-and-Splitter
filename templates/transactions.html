@@ -174,23 +174,29 @@
         });
 
         function loadTransactions() {
+            console.log('Loading transactions...');
             fetch('/api/transactions')
                 .then(response => {
+                    console.log('Response status:', response.status);
                     if (!response.ok) {
-                        throw new Error('Network response was not ok');
+                        throw new Error(`HTTP error! status: ${response.status}`);
                     }
                     return response.json();
                 })
                 .then(data => {
+                    console.log('Received data:', data);
                     if (!Array.isArray(data)) {
-                        throw new Error('Invalid data format');
+                        throw new Error('Invalid data format: Expected an array');
+                    }
+                    if (data.length === 0) {
+                        console.log('No transactions found');
                     }
                     updateTransactionsList(data);
                 })
                 .catch(error => {
                     console.error('Error loading transactions:', error);
                     const tbody = document.getElementById('transactions-table');
-                    tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: red;">Error loading transactions. Please try again.</td></tr>';
+                    tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: red;">Error loading transactions: ${error.message}</td></tr>`;
                 });
         }
 
@@ -210,13 +216,11 @@
                     <td>${t.description || 'No description'}</td>
                     <td>${t.category || 'Uncategorized'}</td>
                     <td class="${t.type}">${t.type === 'incoming' ? '+' : '-'}₹${parseFloat(t.amount).toFixed(2)}</td>
-                    <td>${t.type}${t.is_group ? ' (Group)' : ''}</td>
+                    <td>${t.type}</td>
                     <td>
-                        ${!t.is_group ? `
-                            <button class="edit-btn" onclick="showEditTransactionModal(${t.id}, ${t.amount}, '${t.description.replace(/'/g, "\\'")}', '${t.category || ''}', '${t.type}')">
-                                Edit
-                            </button>
-                        ` : ''}
+                        <button class="edit-btn" onclick="showEditTransactionModal(${t.id}, ${t.amount}, '${t.description.replace(/'/g, "\\'")}', '${t.category || ''}', '${t.type}')">
+                            Edit
+                        </button>
                     </td>
                 `;
                 tbody.appendChild(row);
