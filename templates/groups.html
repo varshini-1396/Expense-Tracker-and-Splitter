@@ -601,14 +601,16 @@
                 settlements.forEach(s => {
                     summaryHTML += `
                         <div class="settlement-item">
-                            <span>${s.from}</span>
+                            <span class="debtor">${s.from}</span>
                             <span>→</span>
-                            <span>${s.to}</span>
+                            <span class="creditor">${s.to}</span>
                             <span class="amount">₹${s.amount.toFixed(2)}</span>
                         </div>
                     `;
                 });
                 summaryHTML += '</div>';
+            } else {
+                summaryHTML += '<p class="no-settlements">No settlements needed. All balances are settled!</p>';
             }
             
             settleSummary.innerHTML = summaryHTML;

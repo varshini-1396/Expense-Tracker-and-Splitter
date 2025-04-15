@@ -23,19 +23,107 @@ body {
 .logo {
     font-size: 1.5rem;
     font-weight: bold;
+    color: #6c5ce7;
+}
+
+.nav-links {
+    display: flex;
+    gap: 1rem;
 }
 
 .nav-links a {
     text-decoration: none;
-    color: #333;
-    margin-left: 2rem;
-    padding: 0.5rem 1rem;
-    border-radius: 4px;
+    color: white;
+    padding: 0.75rem 1.25rem;
+    border-radius: 8px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    font-size: 0.95rem;
 }
 
+/* Home link */
+.nav-links a[href="/"] {
+    background-color: #4CAF50;
+}
+
+.nav-links a[href="/"]:hover {
+    background-color: #388E3C;
+}
+
+/* Stats link */
+.nav-links a[href="/stats"] {
+    background-color: #2196F3;
+}
+
+.nav-links a[href="/stats"]:hover {
+    background-color: #1976D2;
+}
+
+/* Splitter link */
+.nav-links a[href="/splitter"] {
+    background-color: #FF9800;
+}
+
+.nav-links a[href="/splitter"]:hover {
+    background-color: #F57C00;
+}
+
+/* Groups link */
+.nav-links a[href="/groups"] {
+    background-color: #9C27B0;
+}
+
+.nav-links a[href="/groups"]:hover {
+    background-color: #7B1FA2;
+}
+
+/* Profile link */
+.nav-links a[href="/profile"] {
+    background-color: #E91E63;
+}
+
+.nav-links a[href="/profile"]:hover {
+    background-color: #C2185B;
+}
+
+/* Active state */
 .nav-links a.active {
-    background-color: #b388ff;
-    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Mobile Responsive Styles */
+@media (max-width: 768px) {
+    .navbar {
+        padding: 0.75rem 1rem;
+    }
+
+    .nav-links {
+        gap: 0.5rem;
+    }
+
+    .nav-links a {
+        padding: 0.5rem 0.75rem;
+        font-size: 0.85rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .navbar {
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .nav-links {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .nav-links a {
+        flex: 1;
+        text-align: center;
+        padding: 0.75rem;
+    }
 }
 
 /* Main Content Styles */
@@ -1400,5 +1488,159 @@ select#category option {
 @media (max-width: 768px) {
     html {
         -webkit-text-size-adjust: 100%;
+    }
+}
+
+/* Settlement Styles */
+.settle-summary {
+    background-color: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    margin-bottom: 20px;
+}
+
+.settle-summary h3 {
+    color: #333;
+    margin-bottom: 15px;
+    font-size: 1.2em;
+}
+
+.balances-list {
+    margin-bottom: 20px;
+}
+
+.balance-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    background-color: #f8f9fa;
+    border-radius: 4px;
+    margin-bottom: 8px;
+}
+
+.balance-item .green {
+    color: #28a745;
+}
+
+.balance-item .red {
+    color: #dc3545;
+}
+
+.balance-item .gray {
+    color: #6c757d;
+}
+
+.settlements-list {
+    margin-top: 15px;
+}
+
+.settlement-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px;
+    background-color: #f8f9fa;
+    border-radius: 4px;
+    margin-bottom: 8px;
+    gap: 10px;
+}
+
+.settlement-item .debtor {
+    color: #dc3545;
+    font-weight: 500;
+}
+
+.settlement-item .creditor {
+    color: #28a745;
+    font-weight: 500;
+}
+
+.settlement-item .amount {
+    font-weight: 500;
+    color: #333;
+}
+
+.no-settlements {
+    text-align: center;
+    color: #6c757d;
+    padding: 15px;
+    background-color: #f8f9fa;
+    border-radius: 4px;
+}
+
+.settle-actions {
+    text-align: center;
+    margin-top: 20px;
+}
+
+.settle-actions button {
+    background-color: #6c5ce7;
+    color: white;
+    padding: 12px 24px;
+    border-radius: 4px;
+    font-weight: 500;
+    transition: background-color 0.3s ease;
+}
+
+.settle-actions button:hover {
+    background-color: #5b4bc4;
+}
+
+/* Settlement Modal Styles */
+#settle-modal .modal-content {
+    max-width: 500px;
+}
+
+.settlement-confirmation {
+    background-color: #f8f9fa;
+    padding: 15px;
+    border-radius: 8px;
+    margin: 15px 0;
+}
+
+.settlement-confirm-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    background-color: white;
+    border-radius: 4px;
+    margin-bottom: 8px;
+}
+
+.settlement-confirm-item:last-child {
+    margin-bottom: 0;
+}
+
+.settlement-note {
+    color: #6c757d;
+    font-size: 0.9em;
+    text-align: center;
+    margin-top: 15px;
+}
+
+/* Mobile Responsive Styles for Settlement */
+@media (max-width: 768px) {
+    .settlement-item {
+        flex-wrap: wrap;
+        justify-content: center;
+        text-align: center;
+        gap: 5px;
+    }
+
+    .settlement-item span {
+        flex: 1 1 100%;
+    }
+
+    .settlement-confirm-item {
+        flex-direction: column;
+        gap: 5px;
+        text-align: center;
+    }
+
+    .settle-actions button {
+        width: 100%;
     }
 } 
