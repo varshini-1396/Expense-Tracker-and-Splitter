@@ -884,6 +884,7 @@ td.outgoing {
     max-width: 100%;
     margin: 0 auto;
     overflow-x: hidden;
+    box-sizing: border-box;
 }
 
 .stats-card {
@@ -893,6 +894,7 @@ td.outgoing {
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     width: 100%;
     max-width: 100%;
+    box-sizing: border-box;
 }
 
 .stats-card h2 {
@@ -906,11 +908,12 @@ td.outgoing {
     font-weight: bold;
     margin: 1rem 0;
     color: #333;
+    word-break: break-word;
 }
 
 .transactions {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr;
     gap: 1rem;
 }
 
@@ -918,6 +921,8 @@ td.outgoing {
     padding: 1rem;
     border-radius: 8px;
     background: #f8f9fa;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .incoming {
@@ -940,6 +945,7 @@ td.outgoing {
     margin-top: 0.5rem;
     font-size: 0.9rem;
     color: #666;
+    word-break: break-word;
 }
 
 .charts-container {
@@ -949,6 +955,7 @@ td.outgoing {
     margin: 1rem 0;
     width: 100%;
     max-width: 100%;
+    box-sizing: border-box;
 }
 
 .chart-wrapper {
@@ -958,6 +965,7 @@ td.outgoing {
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     width: 100%;
     max-width: 100%;
+    box-sizing: border-box;
 }
 
 .chart-container {
@@ -965,6 +973,7 @@ td.outgoing {
     height: 250px;
     width: 100%;
     max-width: 100%;
+    box-sizing: border-box;
 }
 
 .transactions-list {
@@ -972,6 +981,10 @@ td.outgoing {
     border-radius: 10px;
     padding: 1.5rem;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    overflow-x: auto;
 }
 
 .transactions-list h2 {
@@ -983,6 +996,7 @@ td.outgoing {
 .transactions-list table {
     width: 100%;
     border-collapse: collapse;
+    table-layout: fixed;
 }
 
 .transactions-list th,
@@ -990,11 +1004,13 @@ td.outgoing {
     padding: 0.75rem;
     text-align: left;
     border-bottom: 1px solid #eee;
+    word-break: break-word;
 }
 
 .transactions-list th {
     font-weight: 600;
     color: #666;
+    white-space: nowrap;
 }
 
 .transactions-list tr:last-child td {
@@ -1016,12 +1032,17 @@ td.outgoing {
     border-radius: 8px;
     margin-bottom: 1rem;
     text-align: center;
+    word-break: break-word;
 }
 
 /* Mobile Responsive Styles */
 @media (max-width: 768px) {
     .stats-dashboard {
         padding: 0.5rem;
+    }
+
+    .stats-card {
+        padding: 1rem;
     }
 
     .charts-container {
@@ -1037,42 +1058,68 @@ td.outgoing {
     }
 
     .transactions-list {
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
+        padding: 1rem;
     }
 
     .transactions-list table {
-        min-width: 100%;
-        width: auto;
+        display: block;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
     }
 
     .transactions-list th,
     .transactions-list td {
         padding: 0.5rem;
         font-size: 0.8rem;
+        min-width: 100px;
+    }
+
+    .transactions-list th:nth-child(1),
+    .transactions-list td:nth-child(1) {
+        width: 25%;
+    }
+
+    .transactions-list th:nth-child(2),
+    .transactions-list td:nth-child(2) {
+        width: 35%;
+    }
+
+    .transactions-list th:nth-child(3),
+    .transactions-list td:nth-child(3) {
+        width: 20%;
+    }
+
+    .transactions-list th:nth-child(4),
+    .transactions-list td:nth-child(4) {
+        width: 20%;
+    }
+
+    .balance-card .amount {
+        font-size: 1.5rem;
+    }
+
+    .stats-card h2 {
+        font-size: 1.1rem;
     }
 }
 
 @media (max-width: 480px) {
-    .stats-card h2 {
-        font-size: 1.1rem;
+    .stats-card {
+        padding: 0.75rem;
+    }
+
+    .transactions-list th,
+    .transactions-list td {
+        font-size: 0.75rem;
+        padding: 0.4rem;
     }
 
     .balance-card .amount {
         font-size: 1.25rem;
     }
 
-    .chart-card {
-        height: 200px;
-    }
-
-    .chart-wrapper {
-        height: 150px;
-    }
-
-    th, td {
-        padding: 0.4rem;
-        font-size: 0.8rem;
+    .chart-container {
+        height: 180px;
     }
 }
 
