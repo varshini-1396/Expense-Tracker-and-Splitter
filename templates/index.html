@@ -48,17 +48,9 @@
                 </div>
             </div>
 
-            <!-- Recent Activity -->
-            <div class="recent-activity">
-                <h2>Recent Activity</h2>
-                <div class="activity-list">
-                    <!-- Activity items will be added dynamically -->
-                </div>
-            </div>
-
             <!-- Upcoming Settlements -->
             <div class="upcoming-settlements">
-                <h2>Upcoming Settlements</h2>
+                <h2><i class="fas fa-calendar-alt"></i> Upcoming Settlements</h2>
                 <div class="settlements-list">
                     <!-- Settlement items will be added dynamically -->
                 </div>
@@ -113,64 +105,50 @@
     </div>
 
     <script>
-        // Load recent activity and settlements
+        // Load settlements
         document.addEventListener('DOMContentLoaded', function() {
-            loadRecentActivity();
             loadUpcomingSettlements();
         });
-
-        function loadRecentActivity() {
-            fetch('/api/recent-activity')
-                .then(response => response.json())
-                .then(data => {
-                    const activityList = document.querySelector('.activity-list');
-                    activityList.innerHTML = data.map(activity => `
-                        <div class="activity-item">
-                            <div class="activity-icon">
-                                <i class="fas ${getActivityIcon(activity.type)}"></i>
-                            </div>
-                            <div class="activity-details">
-                                <div class="activity-title">${activity.title}</div>
-                                <div class="activity-meta">
-                                    <span class="activity-date">${new Date(activity.date).toLocaleDateString()}</span>
-                                    <span class="activity-amount ${activity.type}">${activity.amount}</span>
-                                </div>
-                            </div>
-                        </div>
-                    `).join('');
-                });
-        }
 
         function loadUpcomingSettlements() {
             fetch('/api/upcoming-settlements')
                 .then(response => response.json())
                 .then(data => {
                     const settlementsList = document.querySelector('.settlements-list');
-                    settlementsList.innerHTML = data.map(settlement => `
-                        <div class="settlement-item">
-                            <div class="settlement-details">
-                                <div class="settlement-title">${settlement.title}</div>
-                                <div class="settlement-meta">
-                                    <span class="settlement-date">Due: ${new Date(settlement.due_date).toLocaleDateString()}</span>
-                                    <span class="settlement-amount">₹${settlement.amount}</span>
-                                </div>
+                    if (data.length === 0) {
+                        settlementsList.innerHTML = `
+                            <div class="no-settlements">
+                                <i class="fas fa-check-circle"></i>
+                                <p>No upcoming settlements</p>
                             </div>
-                            <button class="settle-btn" onclick="settlePayment(${settlement.id})">
-                                Settle Now
-                            </button>
+                        `;
+                    } else {
+                        settlementsList.innerHTML = data.map(settlement => `
+                            <div class="settlement-item">
+                                <div class="settlement-details">
+                                    <div class="settlement-title">${settlement.title}</div>
+                                    <div class="settlement-meta">
+                                        <span class="settlement-date">Due: ${new Date(settlement.due_date).toLocaleDateString()}</span>
+                                        <span class="settlement-amount">₹${settlement.amount}</span>
+                                    </div>
+                                </div>
+                                <button class="settle-btn" onclick="settlePayment(${settlement.id})">
+                                    <i class="fas fa-check"></i> Settle Now
+                                </button>
+                            </div>
+                        `).join('');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading settlements:', error);
+                    const settlementsList = document.querySelector('.settlements-list');
+                    settlementsList.innerHTML = `
+                        <div class="no-settlements">
+                            <i class="fas fa-exclamation-circle"></i>
+                            <p>Error loading settlements. Please try again later.</p>
                         </div>
-                    `).join('');
+                    `;
                 });
-        }
-
-        function getActivityIcon(type) {
-            const icons = {
-                'transaction': 'fa-exchange-alt',
-                'group': 'fa-users',
-                'settlement': 'fa-handshake',
-                'reminder': 'fa-bell'
-            };
-            return icons[type] || 'fa-circle';
         }
 
         // Modal functions
@@ -201,7 +179,6 @@
             .then(response => response.json())
             .then(data => {
                 closeModal('addTransactionModal');
-                loadRecentActivity();
                 document.getElementById('transactionForm').reset();
             })
             .catch(error => console.error('Error:', error));
