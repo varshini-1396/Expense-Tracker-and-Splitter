@@ -666,6 +666,43 @@ def settle_group(group_id):
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
 
+@app.route('/api/groups/<int:group_id>/leave', methods=['POST'])
+@login_required
+def leave_group(group_id):
+    try:
+        # Get the group
+        group = Group.query.get_or_404(group_id)
+        
+        # Verify user is a member of the group
+        member = GroupMember.query.filter_by(
+            group_id=group_id,
+            user_id=current_user.id
+        ).first()
+        
+        if not member:
+            return jsonify({'error': 'You are not a member of this group'}), 403
+        
+        # Check if user is the last admin
+        if member.is_admin:
+            other_admins = GroupMember.query.filter(
+                GroupMember.group_id == group_id,
+                GroupMember.user_id != current_user.id,
+                GroupMember.is_admin == True
+            ).count()
+            
+            if other_admins == 0:
+                return jsonify({'error': 'You are the last admin. Please assign another admin before leaving.'}), 400
+        
+        # Remove the member
+        db.session.delete(member)
+        db.session.commit()
+        
+        return jsonify({'message': 'Successfully left the group'})
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
 @app.route('/api/stats')
 @login_required
 def get_stats():

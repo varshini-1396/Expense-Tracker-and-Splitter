@@ -143,10 +143,4 @@ This project is licensed - see the [LICENSE](LICENSE) file for details.
 
 If you encounter any issues or have questions, please open an issue in the GitHub repository.
 
-## TODO
 
-- [ ] Add unit tests
-- [ ] Implement CI/CD pipeline
-- [ ] Add more detailed API documentation
-- [ ] Create deployment documentation
-- [ ] Add contribution guidelines
