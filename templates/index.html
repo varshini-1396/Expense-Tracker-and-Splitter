@@ -164,36 +164,37 @@
         </div>
     </div>
 
-    <!-- Create Group Modal -->
-    <div id="createGroupModal" class="modal">
+  <!-- Create Group Modal -->
+    <div id="create-group-modal" class="modal">
         <div class="modal-content">
             <h2>Create New Group</h2>
-            <form id="createGroupForm" onsubmit="createGroup(event)">
+            <form id="create-group-form" onsubmit="createGroup(event)">
                 <div class="form-group">
-                    <label for="groupName">Group Name</label>
-                    <input type="text" id="groupName" required>
+                    <label for="group-name">Group Name</label>
+                    <input type="text" id="group-name" required>
                 </div>
                 <div class="form-group">
-                    <label for="groupDescription">Description</label>
-                    <textarea id="groupDescription"></textarea>
+                    <label for="group-description">Description</label>
+                    <textarea id="group-description"></textarea>
                 </div>
                 <div class="form-group">
                     <label>Add Members</label>
-                    <div class="member-search">
-                        <input type="text" id="memberSearch" placeholder="Search users...">
-                        <div id="searchResults" class="search-results"></div>
+                    <div id="members-list">
+                        <!-- Members will be added here -->
                     </div>
-                    <div id="selectedMembers" class="selected-members">
-                        <!-- Selected members will appear here -->
+                    <div class="add-member-section">
+                        <input type="text" id="member-search" placeholder="Search users...">
+                        <div id="search-results"></div>
                     </div>
                 </div>
                 <div class="modal-buttons">
-                    <button type="button" onclick="closeModal('createGroupModal')">Cancel</button>
+                    <button type="button" onclick="closeCreateGroupModal()">Cancel</button>
                     <button type="submit">Create Group</button>
                 </div>
             </form>
         </div>
     </div>
+
 
     <script>
         // Load settlements
@@ -387,12 +388,12 @@
 
         // Handle member search
         let searchTimeout;
-        document.getElementById('memberSearch').addEventListener('input', function(e) {
+        document.getElementById('member-search').addEventListener('input', function(e) {
             clearTimeout(searchTimeout);
             const query = e.target.value;
             
             if (query.length < 2) {
-                document.getElementById('searchResults').innerHTML = '';
+                document.getElementById('search-results').innerHTML = '';
                 return;
             }
 
@@ -400,30 +401,36 @@
                 fetch(`/api/users/search?q=${query}`)
                     .then(response => response.json())
                     .then(users => {
-                        const results = document.getElementById('searchResults');
+                        const results = document.getElementById('search-results');
+                        results.style.display = 'block';
                         results.innerHTML = users.map(user => `
                             <div class="search-result" onclick="addMember(${user.id}, '${user.username}')">
-                                ${user.name} (${user.username})
+                                ${user.username}
                             </div>
                         `).join('');
                     })
-                    .catch(error => console.error('Error searching users:', error));
+                    .catch(error => {
+                        console.error('Error searching users:', error);
+                        document.getElementById('search-results').innerHTML = '<div class="search-result">Error searching users</div>';
+                    });
             }, 300);
         });
 
         // Add member to selected list
         function addMember(userId, username) {
-            const selectedMembers = document.getElementById('selectedMembers');
-            if (!selectedMembers.querySelector(`[data-user-id="${userId}"]`)) {
-                selectedMembers.innerHTML += `
-                    <div class="selected-member" data-user-id="${userId}">
-                        ${username}
-                        <button type="button" onclick="removeMember(${userId})">×</button>
-                    </div>
+            const membersList = document.getElementById('members-list');
+            if (!membersList.querySelector(`[data-user-id="${userId}"]`)) {
+                const memberDiv = document.createElement('div');
+                memberDiv.className = 'selected-member';
+                memberDiv.dataset.userId = userId;
+                memberDiv.innerHTML = `
+                    <span>${username}</span>
+                    <button type="button" onclick="removeMember(${userId})">×</button>
                 `;
+                membersList.appendChild(memberDiv);
             }
-            document.getElementById('memberSearch').value = '';
-            document.getElementById('searchResults').innerHTML = '';
+            document.getElementById('member-search').value = '';
+            document.getElementById('search-results').style.display = 'none';
         }
 
         // Remove member from selected list
@@ -438,8 +445,8 @@
         function createGroup(event) {
             event.preventDefault();
             const formData = {
-                name: document.getElementById('groupName').value,
-                description: document.getElementById('groupDescription').value,
+                name: document.getElementById('group-name').value,
+                description: document.getElementById('group-description').value,
                 members: Array.from(document.querySelectorAll('.selected-member'))
                     .map(member => parseInt(member.dataset.userId))
             };
@@ -451,15 +458,23 @@
                 },
                 body: JSON.stringify(formData)
             })
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to create group');
+                }
+                return response.json();
+            })
             .then(data => {
-                closeModal('createGroupModal');
-                document.getElementById('createGroupForm').reset();
-                document.getElementById('selectedMembers').innerHTML = '';
+                closeCreateGroupModal();
+                document.getElementById('create-group-form').reset();
+                document.getElementById('members-list').innerHTML = '';
                 // Redirect to groups page after successful creation
                 window.location.href = "{{ url_for('groups_page') }}";
             })
-            .catch(error => console.error('Error:', error));
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Failed to create group. Please try again.');
+            });
         }
 
         // Show modals
@@ -469,11 +484,22 @@
         }
 
         function showCreateGroupModal() {
-            document.getElementById('createGroupModal').style.display = 'flex';
-            document.getElementById('memberSearch').value = '';
-            document.getElementById('searchResults').innerHTML = '';
-            document.getElementById('selectedMembers').innerHTML = '';
+            document.getElementById('create-group-modal').style.display = 'flex';
+            document.getElementById('member-search').value = '';
+            document.getElementById('search-results').innerHTML = '';
+            document.getElementById('members-list').innerHTML = '';
         }
+
+        function closeCreateGroupModal() {
+            document.getElementById('create-group-modal').style.display = 'none';
+        }
+
+        // Close modal when clicking outside
+        document.getElementById('create-group-modal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeCreateGroupModal();
+            }
+        });
 
         // Initialize
         document.addEventListener('DOMContentLoaded', function() {
