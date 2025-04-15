@@ -193,6 +193,10 @@ def splitter():
 def groups_page():
     return render_template('groups.html')
 
+@app.route('/transactions')
+@login_required
+def transactions_page():
+    return render_template('transactions.html')
 
 @app.route('/api/users/search')
 @login_required

@@ -59,6 +59,15 @@ body {
     background-color: #1976D2;
 }
 
+/* Transactions link */
+.nav-links a[href="/transactions"] {
+    background-color: #FF5722;
+}
+
+.nav-links a[href="/transactions"]:hover {
+    background-color: #E64A19;
+}
+
 /* Splitter link */
 .nav-links a[href="/splitter"] {
     background-color: #FF9800;
@@ -86,10 +95,9 @@ body {
     background-color: #C2185B;
 }
 
-/* Active state */
+/* Hide active link */
 .nav-links a.active {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    display: none;
 }
 
 /* Mobile Responsive Styles */
@@ -833,84 +841,169 @@ td.outgoing {
 }
 
 /* Stats Page Styles */
-.stats-container {
+.stats-dashboard {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 2rem;
-    margin-bottom: 2rem;
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+    padding: 1rem;
+    max-width: 1200px;
+    margin: 0 auto;
 }
 
-.stat-card {
-    background-color: white;
-    padding: 2rem;
+.stats-card {
+    background: white;
     border-radius: 12px;
+    padding: 1.5rem;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    text-align: center;
 }
 
-.stat-card h2 {
-    color: #666;
+.stats-card h2 {
+    color: #333;
     margin-bottom: 1rem;
+    font-size: 1.25rem;
 }
 
-.stat-value {
+.balance-card .amount {
     font-size: 2rem;
     font-weight: bold;
+    margin: 1rem 0;
     color: #333;
 }
 
-.stat-value.income {
-    color: #4caf50;
-}
-
-.stat-value.expense {
-    color: #f44336;
-}
-
-.chart-section {
-    background-color: white;
-    padding: 2rem;
-    border-radius: 12px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    margin-top: 2rem;
-}
-
-.chart-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 2rem;
-}
-
-.time-filter {
-    display: flex;
-    align-items: center;
+.transactions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
     gap: 1rem;
 }
 
-.time-filter label {
-    color: #666;
-    font-weight: 500;
+.incoming, .outgoing {
+    padding: 1rem;
+    border-radius: 8px;
+    background: #f8f9fa;
 }
 
-.time-filter select {
-    padding: 0.5rem;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    background-color: white;
-    color: #333;
+.incoming {
+    border-left: 4px solid #4caf50;
+}
+
+.outgoing {
+    border-left: 4px solid #f44336;
+}
+
+.arrow {
+    font-size: 1.2rem;
+    margin-right: 0.5rem;
+}
+
+.up { color: #4caf50; }
+.down { color: #f44336; }
+
+.expense-breakdown {
+    margin-top: 0.5rem;
     font-size: 0.9rem;
+    color: #666;
 }
 
-.time-filter select:focus {
-    outline: none;
-    border-color: #b388ff;
+.charts-container {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
 }
 
-.chart-container {
+.chart-card {
+    height: 300px;
+}
+
+.chart-wrapper {
+    height: 250px;
     position: relative;
-    height: 400px;
+}
+
+.table-responsive {
+    overflow-x: auto;
+}
+
+table {
     width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+}
+
+th, td {
+    padding: 0.75rem;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+}
+
+th {
+    background: #f8f9fa;
+    font-weight: 500;
+    color: #666;
+}
+
+.error-message {
+    background: #ffebee;
+    color: #c62828;
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    text-align: center;
+}
+
+/* Mobile Responsive Styles */
+@media (max-width: 768px) {
+    .stats-dashboard {
+        padding: 0.75rem;
+        gap: 1rem;
+    }
+
+    .stats-card {
+        padding: 1rem;
+    }
+
+    .transactions {
+        grid-template-columns: 1fr;
+    }
+
+    .balance-card .amount {
+        font-size: 1.5rem;
+    }
+
+    .chart-card {
+        height: 250px;
+    }
+
+    .chart-wrapper {
+        height: 200px;
+    }
+
+    th, td {
+        padding: 0.5rem;
+        font-size: 0.9rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .stats-card h2 {
+        font-size: 1.1rem;
+    }
+
+    .balance-card .amount {
+        font-size: 1.25rem;
+    }
+
+    .chart-card {
+        height: 200px;
+    }
+
+    .chart-wrapper {
+        height: 150px;
+    }
+
+    th, td {
+        padding: 0.4rem;
+        font-size: 0.8rem;
+    }
 }
 
 /* Bill Splitter Styles */

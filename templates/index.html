@@ -146,20 +146,24 @@
                 .then(response => response.json())
                 .then(data => {
                     updateBalances(data);
+                    // Update transactions list with recent transactions from stats
+                    if (data.recent_transactions && data.recent_transactions.length > 0) {
+                        updateTransactionsList(data.recent_transactions);
+                    } else {
+                        // If no recent transactions in stats, try to get from transactions API
+                        fetch('/api/transactions')
+                            .then(response => response.json())
+                            .then(transactions => {
+                                // Sort transactions by date (newest first)
+                                const sortedTransactions = transactions.sort((a, b) => new Date(b.date) - new Date(a.date));
+                                // Take only the 5 most recent transactions
+                                const recentTransactions = sortedTransactions.slice(0, 5);
+                                updateTransactionsList(recentTransactions);
+                            })
+                            .catch(error => console.error('Error loading transactions:', error));
+                    }
                 })
                 .catch(error => console.error('Error loading stats:', error));
-
-            // Then get the recent transactions
-            fetch('/api/transactions')
-                .then(response => response.json())
-                .then(data => {
-                    // Sort transactions by date (newest first)
-                    const sortedTransactions = data.sort((a, b) => new Date(b.date) - new Date(a.date));
-                    // Take only the 5 most recent transactions
-                    const recentTransactions = sortedTransactions.slice(0, 5);
-                    updateTransactionsList(recentTransactions);
-                })
-                .catch(error => console.error('Error loading transactions:', error));
         }
 
         function updateTransactionsList(transactions) {
@@ -175,9 +179,9 @@
                 const row = document.createElement('tr');
                 row.innerHTML = `
                     <td>${new Date(t.date).toLocaleDateString()}</td>
-                    <td>${t.description}</td>
+                    <td>${t.description || 'No description'}</td>
                     <td class="${t.type}">${t.type === 'incoming' ? '+' : '-'}₹${parseFloat(t.amount).toFixed(2)}</td>
-                    <td>${t.type}</td>
+                    <td>${t.type}${t.is_group ? ' (Group)' : ''}</td>
                 `;
                 tbody.appendChild(row);
             });

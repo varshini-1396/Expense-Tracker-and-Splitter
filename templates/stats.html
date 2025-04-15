@@ -25,8 +25,9 @@
             <h1>Your <span class="purple">Financial Statistics</span></h1>
         </div>
 
-        <div class="dashboard">
-            <div class="balance-card">
+        <div class="stats-dashboard">
+            <!-- Balance Overview Card -->
+            <div class="stats-card balance-card">
                 <h2>Total Balance</h2>
                 <div class="amount" id="total-balance">₹0</div>
                 
@@ -47,32 +48,44 @@
                 </div>
             </div>
 
-            <div class="transactions-list">
-                <h2>Expense Distribution</h2>
-                <canvas id="category-chart"></canvas>
+            <!-- Charts Section -->
+            <div class="charts-container">
+                <!-- Category Distribution Chart -->
+                <div class="stats-card chart-card">
+                    <h2>Expense Distribution</h2>
+                    <div class="chart-wrapper">
+                        <canvas id="category-chart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Monthly Trends Chart -->
+                <div class="stats-card chart-card">
+                    <h2>Monthly Trends</h2>
+                    <div class="chart-wrapper">
+                        <canvas id="monthly-chart"></canvas>
+                    </div>
+                </div>
             </div>
 
-            <div class="transactions-list">
-                <h2>Monthly Trends</h2>
-                <canvas id="monthly-chart"></canvas>
-            </div>
-
-            <div class="transactions-list">
+            <!-- Recent Transactions -->
+            <div class="stats-card transactions-card">
                 <h2>Recent Transactions</h2>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Date</th>
-                            <th>Description</th>
-                            <th>Category</th>
-                            <th>Amount</th>
-                            <th>Type</th>
-                        </tr>
-                    </thead>
-                    <tbody id="recent-transactions-table">
-                        <!-- Transactions will be added here dynamically -->
-                    </tbody>
-                </table>
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Description</th>
+                                <th>Category</th>
+                                <th>Amount</th>
+                                <th>Type</th>
+                            </tr>
+                        </thead>
+                        <tbody id="recent-transactions-table">
+                            <!-- Transactions will be added here dynamically -->
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </main>
@@ -89,6 +102,10 @@
                     updateOverview(data);
                     updateCharts(data);
                     updateRecentTransactions(data.recent_transactions);
+                })
+                .catch(error => {
+                    console.error('Error loading stats:', error);
+                    showError('Failed to load statistics. Please try again later.');
                 });
         }
 
@@ -129,9 +146,14 @@
                 },
                 options: {
                     responsive: true,
+                    maintainAspectRatio: false,
                     plugins: {
                         legend: {
-                            position: 'bottom'
+                            position: 'bottom',
+                            labels: {
+                                boxWidth: 12,
+                                padding: 20
+                            }
                         }
                     }
                 }
@@ -168,12 +190,26 @@
                 },
                 options: {
                     responsive: true,
+                    maintainAspectRatio: false,
                     scales: {
                         x: {
-                            stacked: true
+                            stacked: true,
+                            ticks: {
+                                maxRotation: 45,
+                                minRotation: 45
+                            }
                         },
                         y: {
                             stacked: true
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                boxWidth: 12,
+                                padding: 20
+                            }
                         }
                     }
                 }
@@ -184,17 +220,30 @@
             const tbody = document.getElementById('recent-transactions-table');
             tbody.innerHTML = '';
             
+            if (!transactions || transactions.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">No recent transactions</td></tr>';
+                return;
+            }
+
             transactions.forEach(t => {
                 const row = document.createElement('tr');
                 row.innerHTML = `
                     <td>${new Date(t.date).toLocaleDateString()}</td>
-                    <td>${t.description}</td>
+                    <td>${t.description || 'No description'}</td>
                     <td>${t.category || 'Uncategorized'}</td>
-                    <td class="${t.type}">${t.type === 'incoming' ? '+' : '-'}₹${t.amount}</td>
+                    <td class="${t.type}">${t.type === 'incoming' ? '+' : '-'}₹${parseFloat(t.amount).toFixed(2)}</td>
                     <td>${t.type}${t.is_group ? ' (Group)' : ''}</td>
                 `;
                 tbody.appendChild(row);
             });
+        }
+
+        function showError(message) {
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'error-message';
+            errorDiv.textContent = message;
+            document.querySelector('.stats-dashboard').prepend(errorDiv);
+            setTimeout(() => errorDiv.remove(), 5000);
         }
     </script>
 </body>
