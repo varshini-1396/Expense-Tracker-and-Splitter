@@ -5,12 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MoneyMate - Home</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css', v=1) }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
     <nav class="navbar">
         <div class="logo">MoneyMate</div>
         <div class="nav-links">
-            <a href="{{ url_for('stats') }}">Stats</a>
+            <a href="{{ url_for('index') }}">Home</a>
             <a href="{{ url_for('transactions') }}">Transactions</a>
             <a href="{{ url_for('splitter') }}">Splitter</a>
             <a href="{{ url_for('groups_page') }}">Groups</a>
@@ -20,55 +21,59 @@
 
     <main>
         <div class="greeting">
-            <h1>Welcome to <span class="purple">MoneyMate</span></h1>
+            <h1>Welcome back, <span class="purple">{{ current_user.username }}</span>!</h1>
         </div>
 
         <div class="dashboard">
-            <div class="balance-card">
-                <h2>Total Balance</h2>
-                <div class="amount" id="total-balance">₹0.00</div>
-                <div class="transactions">
-                    <div class="incoming">
-                        <span class="arrow up">↑</span>
-                        <span>Incoming</span>
-                        <div class="amount" id="total-incoming">₹0.00</div>
-                    </div>
-                    <div class="outgoing">
-                        <span class="arrow down">↓</span>
-                        <span>Outgoing</span>
-                        <div class="amount" id="total-outgoing">₹0.00</div>
-                    </div>
+            <!-- Quick Actions -->
+            <div class="quick-actions">
+                <h2>Quick Actions</h2>
+                <div class="action-grid">
+                    <button class="action-btn" onclick="showAddTransactionModal()">
+                        <i class="fas fa-plus-circle"></i>
+                        <span>Add Transaction</span>
+                    </button>
+                    <button class="action-btn" onclick="showSplitBillModal()">
+                        <i class="fas fa-receipt"></i>
+                        <span>Split Bill</span>
+                    </button>
+                    <button class="action-btn" onclick="showCreateGroupModal()">
+                        <i class="fas fa-users"></i>
+                        <span>Create Group</span>
+                    </button>
+                    <a href="{{ url_for('stats') }}" class="action-btn">
+                        <i class="fas fa-chart-line"></i>
+                        <span>View Stats</span>
+                    </a>
                 </div>
             </div>
 
-            <!-- Transactions List -->
-            <div class="transactions-list">
-                <h3>Recent Transactions</h3>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Date</th>
-                            <th>Description</th>
-                            <th>Amount</th>
-                            <th>Type</th>
-                        </tr>
-                    </thead>
-                    <tbody id="transactions-table">
-                        <!-- Transactions will be added here dynamically -->
-                    </tbody>
-                </table>
+            <!-- Recent Activity -->
+            <div class="recent-activity">
+                <h2>Recent Activity</h2>
+                <div class="activity-list">
+                    <!-- Activity items will be added dynamically -->
+                </div>
+            </div>
+
+            <!-- Upcoming Settlements -->
+            <div class="upcoming-settlements">
+                <h2>Upcoming Settlements</h2>
+                <div class="settlements-list">
+                    <!-- Settlement items will be added dynamically -->
+                </div>
             </div>
         </div>
     </main>
 
-    <!-- Transaction Modal -->
-    <div id="transaction-modal" class="modal">
+    <!-- Add Transaction Modal -->
+    <div id="addTransactionModal" class="modal">
         <div class="modal-content">
-            <h2>Add Transaction</h2>
-            <form id="transaction-form" onsubmit="addTransaction(event)">
+            <h2>Add New Transaction</h2>
+            <form id="transactionForm" onsubmit="addTransaction(event)">
                 <div class="form-group">
                     <label for="amount">Amount</label>
-                    <input type="number" id="amount" required min="0" step="0.01">
+                    <input type="number" id="amount" step="0.01" required>
                 </div>
                 <div class="form-group">
                     <label for="description">Description</label>
@@ -77,219 +82,129 @@
                 <div class="form-group">
                     <label for="category">Category</label>
                     <select id="category" required>
-                        <option value="">Select a category</option>
+                        <option value="">Select Category</option>
                         <option value="Food">Food</option>
                         <option value="Transport">Transport</option>
-                        <option value="Rent">Rent</option>
-                        <option value="Utilities">Utilities</option>
                         <option value="Shopping">Shopping</option>
                         <option value="Entertainment">Entertainment</option>
-                        <option value="Healthcare">Healthcare</option>
+                        <option value="Bills">Bills</option>
                         <option value="Other">Other</option>
                     </select>
                 </div>
-                <input type="hidden" id="transaction-type">
+                <div class="form-group">
+                    <label>Type</label>
+                    <div class="radio-group">
+                        <label>
+                            <input type="radio" name="type" value="incoming" required>
+                            Incoming
+                        </label>
+                        <label>
+                            <input type="radio" name="type" value="outgoing" required>
+                            Outgoing
+                        </label>
+                    </div>
+                </div>
                 <div class="modal-buttons">
-                    <button type="button" onclick="closeTransactionModal()">Cancel</button>
-                    <button type="submit">Add</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Edit Transaction Modal -->
-    <div id="edit-transaction-modal" class="modal">
-        <div class="modal-content">
-            <h2>Edit Transaction</h2>
-            <form id="edit-transaction-form" onsubmit="updateTransaction(event)">
-                <div class="form-group">
-                    <label for="edit-amount">Amount</label>
-                    <input type="number" id="edit-amount" required min="0" step="0.01">
-                </div>
-                <div class="form-group">
-                    <label for="edit-description">Description</label>
-                    <input type="text" id="edit-description" required>
-                </div>
-                <div class="form-group">
-                    <label for="edit-category">Category</label>
-                    <select id="edit-category" required>
-                        <option value="">Select a category</option>
-                        <option value="Food">Food</option>
-                        <option value="Transport">Transport</option>
-                        <option value="Rent">Rent</option>
-                        <option value="Utilities">Utilities</option>
-                        <option value="Shopping">Shopping</option>
-                        <option value="Entertainment">Entertainment</option>
-                        <option value="Healthcare">Healthcare</option>
-                        <option value="Other">Other</option>
-                    </select>
-                </div>
-                <input type="hidden" id="edit-transaction-id">
-                <input type="hidden" id="edit-transaction-type">
-                <div class="modal-buttons">
-                    <button type="button" onclick="deleteTransaction()">Delete</button>
-                    <button type="button" onclick="closeEditTransactionModal()">Cancel</button>
-                    <button type="submit">Save</button>
+                    <button type="button" onclick="closeModal('addTransactionModal')">Cancel</button>
+                    <button type="submit">Add Transaction</button>
                 </div>
             </form>
         </div>
     </div>
 
     <script>
-        // Load transactions on page load
-        document.addEventListener('DOMContentLoaded', loadTransactions);
+        // Load recent activity and settlements
+        document.addEventListener('DOMContentLoaded', function() {
+            loadRecentActivity();
+            loadUpcomingSettlements();
+        });
 
-        function loadTransactions() {
-            // First get the stats for balances
-            fetch('/api/stats')
+        function loadRecentActivity() {
+            fetch('/api/recent-activity')
                 .then(response => response.json())
                 .then(data => {
-                    updateBalances(data);
-                    // Update transactions list with recent transactions from stats
-                    if (data.recent_transactions && data.recent_transactions.length > 0) {
-                        updateTransactionsList(data.recent_transactions);
-                    } else {
-                        // If no recent transactions in stats, try to get from transactions API
-                        fetch('/api/transactions')
-                            .then(response => response.json())
-                            .then(transactions => {
-                                // Sort transactions by date (newest first)
-                                const sortedTransactions = transactions.sort((a, b) => new Date(b.date) - new Date(a.date));
-                                // Take only the 5 most recent transactions
-                                const recentTransactions = sortedTransactions.slice(0, 5);
-                                updateTransactionsList(recentTransactions);
-                            })
-                            .catch(error => console.error('Error loading transactions:', error));
-                    }
-                })
-                .catch(error => console.error('Error loading stats:', error));
+                    const activityList = document.querySelector('.activity-list');
+                    activityList.innerHTML = data.map(activity => `
+                        <div class="activity-item">
+                            <div class="activity-icon">
+                                <i class="fas ${getActivityIcon(activity.type)}"></i>
+                            </div>
+                            <div class="activity-details">
+                                <div class="activity-title">${activity.title}</div>
+                                <div class="activity-meta">
+                                    <span class="activity-date">${new Date(activity.date).toLocaleDateString()}</span>
+                                    <span class="activity-amount ${activity.type}">${activity.amount}</span>
+                                </div>
+                            </div>
+                        </div>
+                    `).join('');
+                });
         }
 
-        function updateTransactionsList(transactions) {
-            const tbody = document.getElementById('transactions-table');
-            tbody.innerHTML = '';
-            
-            if (!transactions || transactions.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="4" style="text-align: center;">No transactions found</td></tr>';
-                return;
-            }
-
-            transactions.forEach(t => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${new Date(t.date).toLocaleDateString()}</td>
-                    <td>${t.description || 'No description'}</td>
-                    <td class="${t.type}">${t.type === 'incoming' ? '+' : '-'}₹${parseFloat(t.amount).toFixed(2)}</td>
-                    <td>${t.type}${t.is_group ? ' (Group)' : ''}</td>
-                `;
-                tbody.appendChild(row);
-            });
+        function loadUpcomingSettlements() {
+            fetch('/api/upcoming-settlements')
+                .then(response => response.json())
+                .then(data => {
+                    const settlementsList = document.querySelector('.settlements-list');
+                    settlementsList.innerHTML = data.map(settlement => `
+                        <div class="settlement-item">
+                            <div class="settlement-details">
+                                <div class="settlement-title">${settlement.title}</div>
+                                <div class="settlement-meta">
+                                    <span class="settlement-date">Due: ${new Date(settlement.due_date).toLocaleDateString()}</span>
+                                    <span class="settlement-amount">₹${settlement.amount}</span>
+                                </div>
+                            </div>
+                            <button class="settle-btn" onclick="settlePayment(${settlement.id})">
+                                Settle Now
+                            </button>
+                        </div>
+                    `).join('');
+                });
         }
 
-        function updateBalances(data) {
-            const totalBalance = data.total_balance || 0;
-            const totalIncoming = data.total_incoming || 0;
-            const totalOutgoing = data.total_outgoing || 0;
-
-            document.getElementById('total-balance').textContent = `₹${totalBalance.toFixed(2)}`;
-            document.getElementById('total-incoming').textContent = `+₹${totalIncoming.toFixed(2)}`;
-            document.getElementById('total-outgoing').textContent = `-₹${totalOutgoing.toFixed(2)}`;
+        function getActivityIcon(type) {
+            const icons = {
+                'transaction': 'fa-exchange-alt',
+                'group': 'fa-users',
+                'settlement': 'fa-handshake',
+                'reminder': 'fa-bell'
+            };
+            return icons[type] || 'fa-circle';
         }
 
-        function showTransactionModal(type) {
-            document.getElementById('transaction-modal').style.display = 'flex';
-            document.getElementById('transaction-type').value = type;
+        // Modal functions
+        function showAddTransactionModal() {
+            document.getElementById('addTransactionModal').style.display = 'flex';
         }
 
-        function closeTransactionModal() {
-            document.getElementById('transaction-modal').style.display = 'none';
-            document.getElementById('transaction-form').reset();
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
         }
 
         function addTransaction(event) {
             event.preventDefault();
-            
-            const amount = document.getElementById('amount').value;
-            const description = document.getElementById('description').value;
-            const category = document.getElementById('category').value;
-            const type = document.getElementById('transaction-type').value;
+            const formData = {
+                amount: document.getElementById('amount').value,
+                description: document.getElementById('description').value,
+                category: document.getElementById('category').value,
+                type: document.querySelector('input[name="type"]:checked').value
+            };
 
             fetch('/api/transactions', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
+                    'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({
-                    amount: parseFloat(amount),
-                    description: description,
-                    category: category,
-                    type: type
-                })
+                body: JSON.stringify(formData)
             })
             .then(response => response.json())
-            .then(() => {
-                closeTransactionModal();
-                loadTransactions();
-            });
-        }
-
-        function showEditTransactionModal(id, amount, description, category, type) {
-            document.getElementById('edit-transaction-id').value = id;
-            document.getElementById('edit-amount').value = amount;
-            document.getElementById('edit-description').value = description;
-            document.getElementById('edit-category').value = category;
-            document.getElementById('edit-transaction-type').value = type;
-            document.getElementById('edit-transaction-modal').style.display = 'flex';
-        }
-
-        function closeEditTransactionModal() {
-            document.getElementById('edit-transaction-modal').style.display = 'none';
-            document.getElementById('edit-transaction-form').reset();
-        }
-
-        function updateTransaction(event) {
-            event.preventDefault();
-            
-            const id = document.getElementById('edit-transaction-id').value;
-            const amount = document.getElementById('edit-amount').value;
-            const description = document.getElementById('edit-description').value;
-            const category = document.getElementById('edit-category').value;
-            const type = document.getElementById('edit-transaction-type').value;
-
-            fetch(`/api/transactions/${id}`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    amount: parseFloat(amount),
-                    description: description,
-                    category: category,
-                    type: type
-                })
+            .then(data => {
+                closeModal('addTransactionModal');
+                loadRecentActivity();
+                document.getElementById('transactionForm').reset();
             })
-            .then(response => response.json())
-            .then(() => {
-                closeEditTransactionModal();
-                loadTransactions();
-            });
-        }
-
-        function deleteTransaction() {
-            if (!confirm('Are you sure you want to delete this transaction?')) {
-                return;
-            }
-
-            const id = document.getElementById('edit-transaction-id').value;
-
-            fetch(`/api/transactions/${id}`, {
-                method: 'DELETE'
-            })
-            .then(response => response.json())
-            .then(() => {
-                closeEditTransactionModal();
-                loadTransactions();
-            });
+            .catch(error => console.error('Error:', error));
         }
     </script>
 </body>
