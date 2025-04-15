@@ -20,6 +20,13 @@ A web-based personal finance management system that helps users track their expe
 - Secure User Authentication
 - Budget Planning and Tracking
 
+### Recent Improvements
+
+- **Mobile Responsiveness**: Optimized for all screen sizes
+- **Improved Navigation**: Streamlined access to key features
+- **Real-time Updates**: Instant feedback on actions
+- **Error Handling**: Better user feedback and error messages
+
 ## Prerequisites
 
 - Python 3.x
@@ -117,6 +124,21 @@ moneymate/
 - WTForms (Form handling and validation)
 - Gunicorn (Production server)
 
+## Mobile Responsiveness
+
+The application is fully responsive and optimized for:
+
+- Smartphones 
+- Tablets
+- Desktop computers
+
+Key mobile optimizations:
+
+- Touch-friendly interfaces
+- Responsive layouts
+- Optimized performance
+- Readable text and properly sized elements
+
 ## Contributing
 
 1. Fork the repository
@@ -142,5 +164,3 @@ This project is licensed - see the [LICENSE](LICENSE) file for details.
 ## Support
 
 If you encounter any issues or have questions, please open an issue in the GitHub repository.
-
-
