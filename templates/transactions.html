@@ -127,7 +127,11 @@
                 .then(data => {
                     updateTransactionsList(data);
                 })
-                .catch(error => console.error('Error loading transactions:', error));
+                .catch(error => {
+                    console.error('Error loading transactions:', error);
+                    const tbody = document.getElementById('transactions-table');
+                    tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">Error loading transactions. Please try again.</td></tr>';
+                });
         }
 
         function updateTransactionsList(transactions) {
@@ -143,7 +147,7 @@
                 const row = document.createElement('tr');
                 row.innerHTML = `
                     <td>${new Date(t.date).toLocaleDateString()}</td>
-                    <td>${t.description}</td>
+                    <td>${t.description || 'No description'}</td>
                     <td>${t.category || 'Uncategorized'}</td>
                     <td class="${t.type}">${t.type === 'incoming' ? '+' : '-'}₹${parseFloat(t.amount).toFixed(2)}</td>
                     <td>${t.type}${t.is_group ? ' (Group)' : ''}</td>
@@ -197,6 +201,11 @@
                     });
 
                     updateTransactionsList(filteredTransactions);
+                })
+                .catch(error => {
+                    console.error('Error filtering transactions:', error);
+                    const tbody = document.getElementById('transactions-table');
+                    tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">Error filtering transactions. Please try again.</td></tr>';
                 });
         }
 
@@ -239,6 +248,10 @@
             .then(() => {
                 closeEditTransactionModal();
                 loadTransactions();
+            })
+            .catch(error => {
+                console.error('Error updating transaction:', error);
+                alert('Failed to update transaction. Please try again.');
             });
         }
 
@@ -256,6 +269,10 @@
             .then(() => {
                 closeEditTransactionModal();
                 loadTransactions();
+            })
+            .catch(error => {
+                console.error('Error deleting transaction:', error);
+                alert('Failed to delete transaction. Please try again.');
             });
         }
     </script>
