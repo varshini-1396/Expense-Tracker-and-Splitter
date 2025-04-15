@@ -104,6 +104,97 @@
         </div>
     </div>
 
+    <!-- Split Bill Modal -->
+    <div id="splitBillModal" class="modal">
+        <div class="modal-content">
+            <h2>Split a Bill</h2>
+            <form id="splitBillForm" onsubmit="splitBill(event)">
+                <div class="form-group">
+                    <label for="splitAmount">Total Amount</label>
+                    <input type="number" id="splitAmount" step="0.01" required>
+                </div>
+                <div class="form-group">
+                    <label for="splitDescription">Description</label>
+                    <input type="text" id="splitDescription" required>
+                </div>
+                <div class="form-group">
+                    <label for="splitCategory">Category</label>
+                    <select id="splitCategory" required>
+                        <option value="">Select Category</option>
+                        <option value="Food">Food</option>
+                        <option value="Transport">Transport</option>
+                        <option value="Shopping">Shopping</option>
+                        <option value="Entertainment">Entertainment</option>
+                        <option value="Bills">Bills</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="splitGroup">Select Group</label>
+                    <select id="splitGroup" required>
+                        <option value="">Select Group</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Split Type</label>
+                    <div class="radio-group">
+                        <label>
+                            <input type="radio" name="splitType" value="equal" checked>
+                            Split Equally
+                        </label>
+                        <label>
+                            <input type="radio" name="splitType" value="custom">
+                            Custom Split
+                        </label>
+                    </div>
+                </div>
+                <div id="customSplitContainer" style="display: none;">
+                    <div class="form-group">
+                        <label>Custom Amounts</label>
+                        <div id="customSplitInputs">
+                            <!-- Will be populated dynamically -->
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-buttons">
+                    <button type="button" onclick="closeModal('splitBillModal')">Cancel</button>
+                    <button type="submit">Split Bill</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Create Group Modal -->
+    <div id="createGroupModal" class="modal">
+        <div class="modal-content">
+            <h2>Create New Group</h2>
+            <form id="createGroupForm" onsubmit="createGroup(event)">
+                <div class="form-group">
+                    <label for="groupName">Group Name</label>
+                    <input type="text" id="groupName" required>
+                </div>
+                <div class="form-group">
+                    <label for="groupDescription">Description</label>
+                    <textarea id="groupDescription"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Add Members</label>
+                    <div class="member-search">
+                        <input type="text" id="memberSearch" placeholder="Search users...">
+                        <div id="searchResults" class="search-results"></div>
+                    </div>
+                    <div id="selectedMembers" class="selected-members">
+                        <!-- Selected members will appear here -->
+                    </div>
+                </div>
+                <div class="modal-buttons">
+                    <button type="button" onclick="closeModal('createGroupModal')">Cancel</button>
+                    <button type="submit">Create Group</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script>
         // Load settlements
         document.addEventListener('DOMContentLoaded', function() {
@@ -209,6 +300,182 @@
                 alert('Failed to settle payment. Please try again.');
             });
         }
+
+        // Load groups for split bill modal
+        function loadGroups() {
+            fetch('/api/groups')
+                .then(response => response.json())
+                .then(groups => {
+                    const select = document.getElementById('splitGroup');
+                    select.innerHTML = '<option value="">Select Group</option>';
+                    groups.forEach(group => {
+                        select.innerHTML += `<option value="${group.id}">${group.name}</option>`;
+                    });
+                })
+                .catch(error => console.error('Error loading groups:', error));
+        }
+
+        // Handle split type change
+        document.querySelector('input[name="splitType"]').addEventListener('change', function(e) {
+            const customContainer = document.getElementById('customSplitContainer');
+            if (e.target.value === 'custom') {
+                customContainer.style.display = 'block';
+                loadGroupMembers();
+            } else {
+                customContainer.style.display = 'none';
+            }
+        });
+
+        // Load group members for custom split
+        function loadGroupMembers() {
+            const groupId = document.getElementById('splitGroup').value;
+            if (!groupId) return;
+
+            fetch(`/api/groups/${groupId}/members`)
+                .then(response => response.json())
+                .then(members => {
+                    const container = document.getElementById('customSplitInputs');
+                    container.innerHTML = '';
+                    members.forEach(member => {
+                        container.innerHTML += `
+                            <div class="member-split">
+                                <label>${member.name}</label>
+                                <input type="number" step="0.01" 
+                                       data-user-id="${member.id}" 
+                                       placeholder="Amount">
+                            </div>
+                        `;
+                    });
+                })
+                .catch(error => console.error('Error loading members:', error));
+        }
+
+        // Handle split bill form submission
+        function splitBill(event) {
+            event.preventDefault();
+            const formData = {
+                amount: document.getElementById('splitAmount').value,
+                description: document.getElementById('splitDescription').value,
+                category: document.getElementById('splitCategory').value,
+                group_id: document.getElementById('splitGroup').value,
+                split_equally: document.querySelector('input[name="splitType"]:checked').value === 'equal'
+            };
+
+            if (!formData.split_equally) {
+                const customSplits = {};
+                document.querySelectorAll('#customSplitInputs input').forEach(input => {
+                    customSplits[input.dataset.userId] = input.value;
+                });
+                formData.custom_splits = customSplits;
+            }
+
+            fetch('/api/groups/' + formData.group_id + '/expenses', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(formData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                closeModal('splitBillModal');
+                document.getElementById('splitBillForm').reset();
+                loadUpcomingSettlements(); // Refresh settlements
+            })
+            .catch(error => console.error('Error:', error));
+        }
+
+        // Handle member search
+        let searchTimeout;
+        document.getElementById('memberSearch').addEventListener('input', function(e) {
+            clearTimeout(searchTimeout);
+            const query = e.target.value;
+            
+            if (query.length < 2) {
+                document.getElementById('searchResults').innerHTML = '';
+                return;
+            }
+
+            searchTimeout = setTimeout(() => {
+                fetch(`/api/users/search?q=${query}`)
+                    .then(response => response.json())
+                    .then(users => {
+                        const results = document.getElementById('searchResults');
+                        results.innerHTML = users.map(user => `
+                            <div class="search-result" onclick="addMember(${user.id}, '${user.username}')">
+                                ${user.name} (${user.username})
+                            </div>
+                        `).join('');
+                    })
+                    .catch(error => console.error('Error searching users:', error));
+            }, 300);
+        });
+
+        // Add member to selected list
+        function addMember(userId, username) {
+            const selectedMembers = document.getElementById('selectedMembers');
+            if (!selectedMembers.querySelector(`[data-user-id="${userId}"]`)) {
+                selectedMembers.innerHTML += `
+                    <div class="selected-member" data-user-id="${userId}">
+                        ${username}
+                        <button type="button" onclick="removeMember(${userId})">×</button>
+                    </div>
+                `;
+            }
+            document.getElementById('memberSearch').value = '';
+            document.getElementById('searchResults').innerHTML = '';
+        }
+
+        // Remove member from selected list
+        function removeMember(userId) {
+            const member = document.querySelector(`.selected-member[data-user-id="${userId}"]`);
+            if (member) {
+                member.remove();
+            }
+        }
+
+        // Handle create group form submission
+        function createGroup(event) {
+            event.preventDefault();
+            const formData = {
+                name: document.getElementById('groupName').value,
+                description: document.getElementById('groupDescription').value,
+                members: Array.from(document.querySelectorAll('.selected-member'))
+                    .map(member => parseInt(member.dataset.userId))
+            };
+
+            fetch('/api/groups', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(formData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                closeModal('createGroupModal');
+                document.getElementById('createGroupForm').reset();
+                document.getElementById('selectedMembers').innerHTML = '';
+                loadGroups(); // Refresh groups list
+            })
+            .catch(error => console.error('Error:', error));
+        }
+
+        // Show modals
+        function showSplitBillModal() {
+            loadGroups();
+            document.getElementById('splitBillModal').style.display = 'flex';
+        }
+
+        function showCreateGroupModal() {
+            document.getElementById('createGroupModal').style.display = 'flex';
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            loadUpcomingSettlements();
+            loadGroups();
+        });
     </script>
 </body>
 </html> 
