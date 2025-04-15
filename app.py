@@ -784,7 +784,6 @@ def get_stats():
         'recent_transactions': all_recent_transactions[:5]
     })
 
-@app.before_first_request
 def create_tables():
     try:
         db.create_all()
@@ -792,13 +791,9 @@ def create_tables():
     except Exception as e:
         print(f"Error creating database tables: {str(e)}")
 
+# Use Flask 2.x approach with app context
+with app.app_context():
+    create_tables()
+
 if __name__ == '__main__':
-    # Create the database tables before running the app
-    with app.app_context():
-        try:
-            db.create_all()
-            print("Database tables created successfully.")
-        except Exception as e:
-            print(f"Error creating database tables: {str(e)}")
-    
     app.run(host='0.0.0.0', port=int(os.getenv('PORT', 5000)), debug=False)
