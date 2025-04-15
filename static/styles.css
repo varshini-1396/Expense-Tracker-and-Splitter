@@ -383,9 +383,10 @@ thead {
 }
 
 th, td {
-    padding: 1rem;
+    padding: 0.75rem;
     text-align: left;
     border-bottom: 1px solid #eee;
+    word-break: break-word;
 }
 
 th {
@@ -412,14 +413,29 @@ td.outgoing {
 
 /* Mobile Responsive Styles */
 @media (max-width: 768px) {
-    table {
-        display: block;
-        overflow-x: auto;
+    .transactions-list {
+        padding: 1rem;
     }
 
     th, td {
-        padding: 0.75rem;
+        padding: 0.5rem;
         font-size: 0.8rem;
+    }
+
+    th:nth-child(1), td:nth-child(1) {
+        width: 25%;
+    }
+
+    th:nth-child(2), td:nth-child(2) {
+        width: 35%;
+    }
+
+    th:nth-child(3), td:nth-child(3) {
+        width: 20%;
+    }
+
+    th:nth-child(4), td:nth-child(4) {
+        width: 20%;
     }
 }
 
@@ -1749,5 +1765,101 @@ td.outgoing {
     .modal-buttons button {
         width: 100%;
         padding: 15px;
+    }
+}
+
+/* Transactions Page Styles */
+.transactions-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 1rem;
+}
+
+.filter-section {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    padding: 1rem;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    flex-wrap: wrap;
+}
+
+.filter-group {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex: 1;
+    min-width: 200px;
+}
+
+.filter-group label {
+    color: #666;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.filter-group select {
+    padding: 0.5rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background-color: white;
+    color: #333;
+    font-size: 0.9rem;
+    width: 100%;
+}
+
+/* Mobile Responsive Styles for Transactions Page */
+@media (max-width: 768px) {
+    .transactions-container {
+        padding: 0.5rem;
+    }
+
+    .filter-section {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .filter-group {
+        width: 100%;
+    }
+
+    .filter-group select {
+        width: 100%;
+    }
+
+    table {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+    }
+
+    th, td {
+        padding: 0.5rem;
+        font-size: 0.8rem;
+    }
+
+    th:nth-child(1), td:nth-child(1) {
+        width: 20%;
+    }
+
+    th:nth-child(2), td:nth-child(2) {
+        width: 25%;
+    }
+
+    th:nth-child(3), td:nth-child(3) {
+        width: 15%;
+    }
+
+    th:nth-child(4), td:nth-child(4) {
+        width: 15%;
+    }
+
+    th:nth-child(5), td:nth-child(5) {
+        width: 15%;
+    }
+
+    th:nth-child(6), td:nth-child(6) {
+        width: 10%;
     }
 } 
