@@ -57,7 +57,6 @@ class User(UserMixin, db.Model):
     profile_image = db.Column(db.String(200), default='default.jpg')
     phone = db.Column(db.String(15))
     transactions = db.relationship('Transaction', backref='user', lazy=True)
-    events = db.relationship('Event', backref='user', lazy=True)
 
 class Transaction(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -66,14 +65,6 @@ class Transaction(db.Model):
     description = db.Column(db.String(200))
     category = db.Column(db.String(50))  # New field for transaction category
     date = db.Column(db.DateTime, default=datetime.utcnow)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-
-class Event(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100), nullable=False)
-    description = db.Column(db.Text)
-    date = db.Column(db.DateTime, nullable=False)
-    budget = db.Column(db.Float)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
 
 # New Models for Group Functionality
@@ -167,11 +158,6 @@ def register():
 def logout():
     logout_user()
     return redirect(url_for('login'))
-
-@app.route('/events-page')
-@login_required
-def events_page():
-    return render_template('events.html')
 
 @app.route('/stats')
 @login_required
@@ -276,27 +262,6 @@ def transactions_page():
     all_transactions.sort(key=lambda x: x['date'], reverse=True)
     
     return jsonify(all_transactions)
-
-@app.route('/api/events', methods=['GET', 'POST'])
-@login_required
-def events():
-    if request.method == 'POST':
-        data = request.json
-        event = Event(
-            name=data['name'],
-            date=datetime.strptime(data['date'], '%Y-%m-%d'),
-            user_id=current_user.id
-        )
-        db.session.add(event)
-        db.session.commit()
-        return jsonify({'message': 'Event added successfully'})
-    
-    events = Event.query.filter_by(user_id=current_user.id).all()
-    return jsonify([{
-        'id': e.id,
-        'name': e.name,
-        'date': e.date.strftime('%Y-%m-%d')
-    } for e in events])
 
 @app.route('/api/profile', methods=['GET', 'PUT'])
 @login_required
