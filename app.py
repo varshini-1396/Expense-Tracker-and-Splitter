@@ -233,15 +233,49 @@ def transactions_page():
         db.session.commit()
         return jsonify({'message': 'Transaction added successfully'})
     
-    transactions = Transaction.query.filter_by(user_id=current_user.id).order_by(Transaction.date.desc()).all()
-    return jsonify([{
-        'id': t.id,
-        'amount': t.amount,
-        'type': t.type,
-        'description': t.description,
-        'category': t.category,
-        'date': t.date.strftime('%Y-%m-%d %H:%M:%S')
-    } for t in transactions])
+    # Get individual transactions
+    individual_transactions = Transaction.query.filter_by(user_id=current_user.id).order_by(Transaction.date.desc()).all()
+    
+    # Get group expenses where the user is a member and their share
+    group_expenses = db.session.query(GroupExpense, ExpenseSplit)\
+        .join(ExpenseSplit, GroupExpense.id == ExpenseSplit.expense_id)\
+        .join(GroupMember, GroupExpense.group_id == GroupMember.group_id)\
+        .filter(GroupMember.user_id == current_user.id)\
+        .filter(ExpenseSplit.user_id == current_user.id)\
+        .order_by(GroupExpense.date.desc())\
+        .all()
+    
+    # Combine and format transactions
+    all_transactions = []
+    
+    # Add individual transactions
+    for t in individual_transactions:
+        all_transactions.append({
+            'id': t.id,
+            'amount': t.amount,
+            'type': t.type,
+            'description': t.description,
+            'category': t.category,
+            'date': t.date.strftime('%Y-%m-%d %H:%M:%S'),
+            'is_group': False
+        })
+    
+    # Add group expenses
+    for expense, split in group_expenses:
+        all_transactions.append({
+            'id': expense.id,
+            'amount': split.amount,  # Only include user's share
+            'type': 'outgoing',  # Group expenses are always outgoing
+            'description': f"Group: {expense.description} (Your share)",
+            'category': expense.category,
+            'date': expense.date.strftime('%Y-%m-%d %H:%M:%S'),
+            'is_group': True
+        })
+    
+    # Sort all transactions by date (newest first)
+    all_transactions.sort(key=lambda x: x['date'], reverse=True)
+    
+    return jsonify(all_transactions)
 
 @app.route('/api/events', methods=['GET', 'POST'])
 @login_required
