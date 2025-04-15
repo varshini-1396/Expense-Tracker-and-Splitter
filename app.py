@@ -4,6 +4,7 @@ from flask_login import LoginManager, UserMixin, login_user, login_required, log
 from flask_bcrypt import Bcrypt
 from datetime import datetime
 import os
+import sys
 from dotenv import load_dotenv
 
 # Load environment variables
@@ -12,11 +13,30 @@ load_dotenv()
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.urandom(24)
 
-# MySQL Configuration
-database_url = os.getenv('MYSQL_URL')
-if not database_url:
-    raise ValueError("MYSQL_URL environment variable is not set. Please set it in your Railway environment variables.")
-app.config['SQLALCHEMY_DATABASE_URI'] = database_url.replace('mysql://', 'mysql+pymysql://')
+# Database Configuration with fallback to SQLite
+try:
+    database_url = os.getenv('MYSQL_URL')
+    if not database_url:
+        print("Warning: MYSQL_URL environment variable is not set. Falling back to SQLite.")
+        app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///site.db'
+    else:
+        # Try to connect to MySQL
+        app.config['SQLALCHEMY_DATABASE_URI'] = database_url.replace('mysql://', 'mysql+pymysql://')
+        
+        # Log the connection string (without credentials)
+        safe_uri = database_url.replace('mysql://', 'mysql://')
+        if '@' in safe_uri:
+            # Mask username/password in logs
+            parts = safe_uri.split('@')
+            masked_uri = 'mysql://***:***@' + parts[1]
+            print(f"Connecting to MySQL: {masked_uri}")
+        else:
+            print(f"Connecting to MySQL (format might be incorrect)")
+except Exception as e:
+    print(f"Error setting up database connection: {str(e)}")
+    print("Falling back to SQLite database.")
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///site.db'
+
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
@@ -24,6 +44,7 @@ bcrypt = Bcrypt(app)
 login_manager = LoginManager(app)
 login_manager.login_view = 'login'
 
+# Rest of your models and routes remain the same
 # Database Models
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -129,9 +150,16 @@ def register():
             
         password_hash = bcrypt.generate_password_hash(password).decode('utf-8')
         user = User(username=username, name=name, email=email, password_hash=password_hash)
-        db.session.add(user)
-        db.session.commit()
-        return redirect(url_for('login'))
+        try:
+            db.session.add(user)
+            db.session.commit()
+            flash('Registration successful! Please log in.')
+            return redirect(url_for('login'))
+        except Exception as e:
+            db.session.rollback()
+            print(f"Error during registration: {str(e)}")
+            flash('An error occurred during registration. Please try again.')
+            return redirect(url_for('register'))
     return render_template('register.html')
 
 @app.route('/logout')
@@ -164,6 +192,7 @@ def splitter():
 @login_required
 def groups_page():
     return render_template('groups.html')
+
 
 @app.route('/api/users/search')
 @login_required
@@ -755,5 +784,21 @@ def get_stats():
         'recent_transactions': all_recent_transactions[:5]
     })
 
+@app.before_first_request
+def create_tables():
+    try:
+        db.create_all()
+        print("Database tables created successfully.")
+    except Exception as e:
+        print(f"Error creating database tables: {str(e)}")
+
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True) 
+    # Create the database tables before running the app
+    with app.app_context():
+        try:
+            db.create_all()
+            print("Database tables created successfully.")
+        except Exception as e:
+            print(f"Error creating database tables: {str(e)}")
+    
+    app.run(host='0.0.0.0', port=int(os.getenv('PORT', 5000)), debug=False)
