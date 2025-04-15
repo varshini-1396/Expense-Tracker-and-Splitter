@@ -195,7 +195,7 @@ def groups_page():
 
 @app.route('/transactions')
 @login_required
-def transactions_page():
+def transactions():
     return render_template('transactions.html')
 
 @app.route('/api/users/search')
@@ -219,7 +219,7 @@ def search_users():
 # API Routes
 @app.route('/api/transactions', methods=['GET', 'POST'])
 @login_required
-def transactions():
+def transactions_page():
     if request.method == 'POST':
         data = request.json
         transaction = Transaction(
