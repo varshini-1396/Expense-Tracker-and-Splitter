@@ -121,8 +121,7 @@ body {
 
     /* Home Page Mobile Layout */
     .dashboard {
-        grid-template-columns: 1fr;
-        gap: 1rem;
+        padding: 1rem;
     }
 
     .balance-card {
@@ -148,32 +147,35 @@ body {
 
     .action-box {
         background-color: white;
-        padding: 1rem;
-        border-radius: 8px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        padding: 1.5rem;
+        border-radius: 12px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         text-align: center;
         display: flex;
         flex-direction: column;
         align-items: center;
-        gap: 0.5rem;
+        gap: 0.75rem;
+        text-decoration: none;
+        color: #333;
+        transition: transform 0.2s ease;
+    }
+
+    .action-box:hover {
+        transform: translateY(-2px);
     }
 
     .action-box i {
         font-size: 1.5rem;
+        color: #6c5ce7;
     }
 
     .action-box span {
-        font-size: 0.9rem;
         font-weight: 500;
     }
 
     /* Transactions List */
     .transactions-list {
         margin-top: 1rem;
-        background-color: white;
-        padding: 1rem;
-        border-radius: 8px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
 
     .transactions-list h3 {
@@ -260,8 +262,10 @@ main {
 
 .dashboard {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr;
     gap: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
 }
 
 /* Balance Card Styles */
@@ -284,6 +288,7 @@ main {
     font-weight: 600;
 }
 
+/* Transactions Section */
 .transactions {
     display: grid;
     grid-template-columns: 1fr 1fr;
