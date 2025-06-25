@@ -4,30 +4,65 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MoneyMate - Home</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css', v=1) }}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css', v=2) }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
 <body>
     <nav class="navbar">
-        <div class="logo">MoneyMate</div>
+        <div class="logo">💰 MoneyMate</div>
         <div class="nav-links">
-            <a href="{{ url_for('stats') }}">Stats</a>
-            <a href="{{ url_for('transactions') }}">Transactions</a>
-            <a href="{{ url_for('splitter') }}">Splitter</a>
-            <a href="{{ url_for('groups_page') }}">Groups</a>
-            <a href="{{ url_for('profile_page') }}">Profile</a>
+            <a href="{{ url_for('stats') }}" class="btn btn-secondary">
+                <i class="fas fa-chart-line"></i> Stats
+            </a>
+            <a href="{{ url_for('transactions') }}" class="btn btn-secondary">
+                <i class="fas fa-list"></i> Transactions
+            </a>
+            <a href="{{ url_for('splitter') }}" class="btn btn-secondary">
+                <i class="fas fa-receipt"></i> Splitter
+            </a>
+            <a href="{{ url_for('groups_page') }}" class="btn btn-secondary">
+                <i class="fas fa-users"></i> Groups
+            </a>
+            <a href="{{ url_for('profile_page') }}" class="btn btn-secondary">
+                <i class="fas fa-user"></i> Profile
+            </a>
         </div>
     </nav>
 
     <main>
         <div class="greeting">
-            <h1>Welcome back, <span class="purple">{{ current_user.username }}</span>!</h1>
+            <h1>Welcome back, <span class="purple">{{ current_user.username }}</span>! 👋</h1>
         </div>
 
         <div class="dashboard">
+            <!-- Balance Overview -->
+            <div class="balance-card">
+                <h2><i class="fas fa-wallet"></i> Current Balance</h2>
+                <div class="amount" id="current-balance">Loading...</div>
+                <div class="transactions">
+                    <div class="incoming">
+                        <span class="arrow up">↗️</span>
+                        <div>
+                            <span>Income</span>
+                            <div class="amount" id="total-income">Loading...</div>
+                        </div>
+                    </div>
+                    <div class="outgoing">
+                        <span class="arrow down">↘️</span>
+                        <div>
+                            <span>Expenses</span>
+                            <div class="amount" id="total-expenses">Loading...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Quick Actions -->
             <div class="quick-actions">
-                <h2>Quick Actions</h2>
+                <h2><i class="fas fa-bolt"></i> Quick Actions</h2>
                 <div class="action-grid">
                     <button class="action-btn" onclick="showAddTransactionModal()">
                         <i class="fas fa-plus-circle"></i>
@@ -38,21 +73,24 @@
                         <span>Split Bill</span>
                     </a>
                     <button class="action-btn" onclick="showCreateGroupModal()">
-                        <i class="fas fa-users"></i>
+                        <i class="fas fa-users-plus"></i>
                         <span>Create Group</span>
                     </button>
                     <a href="{{ url_for('stats') }}" class="action-btn">
-                        <i class="fas fa-chart-line"></i>
-                        <span>View Stats</span>
+                        <i class="fas fa-chart-pie"></i>
+                        <span>View Analytics</span>
                     </a>
                 </div>
             </div>
 
             <!-- Upcoming Settlements -->
             <div class="upcoming-settlements">
-                <h2><i class="fas fa-calendar-alt"></i> Upcoming Settlements</h2>
-                <div class="settlements-list">
-                    <!-- Settlement items will be added dynamically -->
+                <h2><i class="fas fa-clock"></i> Upcoming Settlements</h2>
+                <div class="settlements-list" id="settlements-container">
+                    <div class="loading-placeholder">
+                        <div class="loading"></div>
+                        <span>Loading settlements...</span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -61,167 +99,134 @@
     <!-- Add Transaction Modal -->
     <div id="addTransactionModal" class="modal">
         <div class="modal-content">
-            <h2>Add New Transaction</h2>
+            <h2><i class="fas fa-plus-circle"></i> Add New Transaction</h2>
             <form id="transactionForm" onsubmit="addTransaction(event)">
                 <div class="form-group">
-                    <label for="amount">Amount</label>
-                    <input type="number" id="amount" step="0.01" required>
+                    <label for="amount"><i class="fas fa-rupee-sign"></i> Amount</label>
+                    <input type="number" id="amount" step="0.01" required placeholder="Enter amount">
                 </div>
                 <div class="form-group">
-                    <label for="description">Description</label>
-                    <input type="text" id="description" required>
+                    <label for="description"><i class="fas fa-edit"></i> Description</label>
+                    <input type="text" id="description" required placeholder="What was this for?">
                 </div>
                 <div class="form-group">
-                    <label for="category">Category</label>
+                    <label for="category"><i class="fas fa-tags"></i> Category</label>
                     <select id="category" required>
                         <option value="">Select Category</option>
-                        <option value="Food">Food</option>
-                        <option value="Transport">Transport</option>
-                        <option value="Shopping">Shopping</option>
-                        <option value="Entertainment">Entertainment</option>
-                        <option value="Bills">Bills</option>
-                        <option value="Other">Other</option>
+                        <option value="Food">🍽️ Food</option>
+                        <option value="Transport">🚗 Transport</option>
+                        <option value="Shopping">🛍️ Shopping</option>
+                        <option value="Entertainment">🎬 Entertainment</option>
+                        <option value="Bills">📄 Bills</option>
+                        <option value="Healthcare">🏥 Healthcare</option>
+                        <option value="Education">📚 Education</option>
+                        <option value="Other">📦 Other</option>
                     </select>
                 </div>
                 <div class="form-group">
-                    <label>Type</label>
+                    <label><i class="fas fa-exchange-alt"></i> Transaction Type</label>
                     <div class="radio-group">
                         <label>
                             <input type="radio" name="type" value="incoming" required>
-                            Incoming
+                            <span>💰 Income</span>
                         </label>
                         <label>
                             <input type="radio" name="type" value="outgoing" required>
-                            Outgoing
+                            <span>💸 Expense</span>
                         </label>
                     </div>
                 </div>
                 <div class="modal-buttons">
                     <button type="button" onclick="closeModal('addTransactionModal')">Cancel</button>
-                    <button type="submit">Add Transaction</button>
+                    <button type="submit" class="btn-primary">Add Transaction</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- Split Bill Modal -->
-    <div id="splitBillModal" class="modal">
-        <div class="modal-content">
-            <h2>Split a Bill</h2>
-            <form id="splitBillForm" onsubmit="splitBill(event)">
-                <div class="form-group">
-                    <label for="splitAmount">Total Amount</label>
-                    <input type="number" id="splitAmount" step="0.01" required>
-                </div>
-                <div class="form-group">
-                    <label for="splitDescription">Description</label>
-                    <input type="text" id="splitDescription" required>
-                </div>
-                <div class="form-group">
-                    <label for="splitCategory">Category</label>
-                    <select id="splitCategory" required>
-                        <option value="">Select Category</option>
-                        <option value="Food">Food</option>
-                        <option value="Transport">Transport</option>
-                        <option value="Shopping">Shopping</option>
-                        <option value="Entertainment">Entertainment</option>
-                        <option value="Bills">Bills</option>
-                        <option value="Other">Other</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="splitGroup">Select Group</label>
-                    <select id="splitGroup" required>
-                        <option value="">Select Group</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Split Type</label>
-                    <div class="radio-group">
-                        <label>
-                            <input type="radio" name="splitType" value="equal" checked>
-                            Split Equally
-                        </label>
-                        <label>
-                            <input type="radio" name="splitType" value="custom">
-                            Custom Split
-                        </label>
-                    </div>
-                </div>
-                <div id="customSplitContainer" style="display: none;">
-                    <div class="form-group">
-                        <label>Custom Amounts</label>
-                        <div id="customSplitInputs">
-                            <!-- Will be populated dynamically -->
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-buttons">
-                    <button type="button" onclick="closeModal('splitBillModal')">Cancel</button>
-                    <button type="submit">Split Bill</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-  <!-- Create Group Modal -->
+    <!-- Create Group Modal -->
     <div id="create-group-modal" class="modal">
         <div class="modal-content">
-            <h2>Create New Group</h2>
+            <h2><i class="fas fa-users-plus"></i> Create New Group</h2>
             <form id="create-group-form" onsubmit="createGroup(event)">
                 <div class="form-group">
-                    <label for="group-name">Group Name</label>
-                    <input type="text" id="group-name" required>
+                    <label for="group-name"><i class="fas fa-users"></i> Group Name</label>
+                    <input type="text" id="group-name" required placeholder="Enter group name">
                 </div>
                 <div class="form-group">
-                    <label for="group-description">Description</label>
-                    <textarea id="group-description"></textarea>
+                    <label for="group-description"><i class="fas fa-info-circle"></i> Description</label>
+                    <textarea id="group-description" placeholder="What's this group for?"></textarea>
                 </div>
                 <div class="form-group">
-                    <label>Add Members</label>
-                    <div id="members-list">
-                        <!-- Members will be added here -->
+                    <label><i class="fas fa-user-plus"></i> Add Members</label>
+                    <div id="members-list" class="selected-members">
+                        <!-- Selected members will appear here -->
                     </div>
-                    <div class="add-member-section">
-                        <input type="text" id="member-search" placeholder="Search users...">
-                        <div id="search-results"></div>
+                    <div class="member-search">
+                        <input type="text" id="member-search" placeholder="Search users by username...">
+                        <div id="search-results" class="search-results"></div>
                     </div>
                 </div>
                 <div class="modal-buttons">
                     <button type="button" onclick="closeCreateGroupModal()">Cancel</button>
-                    <button type="submit">Create Group</button>
+                    <button type="submit" class="btn-primary">Create Group</button>
                 </div>
             </form>
         </div>
     </div>
 
-
     <script>
-        // Load settlements
+        // Load data on page load
         document.addEventListener('DOMContentLoaded', function() {
+            loadBalance();
             loadUpcomingSettlements();
         });
+
+        function loadBalance() {
+            fetch('/api/balance')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('current-balance').textContent = data.formatted_balance;
+                })
+                .catch(error => {
+                    console.error('Error loading balance:', error);
+                    document.getElementById('current-balance').textContent = '₹0.00';
+                });
+
+            // Load stats for income/expense totals
+            fetch('/api/stats')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('total-income').textContent = `₹${data.total_incoming.toFixed(2)}`;
+                    document.getElementById('total-expenses').textContent = `₹${data.total_outgoing.toFixed(2)}`;
+                })
+                .catch(error => {
+                    console.error('Error loading stats:', error);
+                    document.getElementById('total-income').textContent = '₹0.00';
+                    document.getElementById('total-expenses').textContent = '₹0.00';
+                });
+        }
 
         function loadUpcomingSettlements() {
             fetch('/api/upcoming-settlements')
                 .then(response => response.json())
                 .then(data => {
-                    const settlementsList = document.querySelector('.settlements-list');
+                    const container = document.getElementById('settlements-container');
                     if (data.length === 0) {
-                        settlementsList.innerHTML = `
+                        container.innerHTML = `
                             <div class="no-settlements">
                                 <i class="fas fa-check-circle"></i>
-                                <p>No upcoming settlements</p>
+                                <p>All caught up! No pending settlements.</p>
                             </div>
                         `;
                     } else {
-                        settlementsList.innerHTML = data.map(settlement => `
+                        container.innerHTML = data.map(settlement => `
                             <div class="settlement-item">
                                 <div class="settlement-details">
                                     <div class="settlement-title">${settlement.title}</div>
                                     <div class="settlement-meta">
                                         <span class="settlement-date">Due: ${new Date(settlement.due_date).toLocaleDateString()}</span>
-                                        <span class="settlement-amount">₹${settlement.amount}</span>
+                                        <span class="settlement-amount">₹${settlement.amount.toFixed(2)}</span>
                                     </div>
                                 </div>
                                 <button class="settle-btn" onclick="settlePayment(${settlement.id})">
@@ -233,11 +238,11 @@
                 })
                 .catch(error => {
                     console.error('Error loading settlements:', error);
-                    const settlementsList = document.querySelector('.settlements-list');
-                    settlementsList.innerHTML = `
+                    const container = document.getElementById('settlements-container');
+                    container.innerHTML = `
                         <div class="no-settlements">
-                            <i class="fas fa-exclamation-circle"></i>
-                            <p>Error loading settlements. Please try again later.</p>
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <p>Error loading settlements. Please refresh the page.</p>
                         </div>
                     `;
                 });
@@ -255,7 +260,7 @@
         function addTransaction(event) {
             event.preventDefault();
             const formData = {
-                amount: document.getElementById('amount').value,
+                amount: parseFloat(document.getElementById('amount').value),
                 description: document.getElementById('description').value,
                 category: document.getElementById('category').value,
                 type: document.querySelector('input[name="type"]:checked').value
@@ -272,8 +277,13 @@
             .then(data => {
                 closeModal('addTransactionModal');
                 document.getElementById('transactionForm').reset();
+                loadBalance(); // Refresh balance
+                showSuccessMessage('Transaction added successfully!');
             })
-            .catch(error => console.error('Error:', error));
+            .catch(error => {
+                console.error('Error:', error);
+                showErrorMessage('Failed to add transaction. Please try again.');
+            });
         }
 
         function settlePayment(expenseId) {
@@ -295,95 +305,25 @@
             })
             .then(() => {
                 loadUpcomingSettlements(); // Refresh the settlements list
+                loadBalance(); // Refresh balance
+                showSuccessMessage('Payment settled successfully!');
             })
             .catch(error => {
                 console.error('Error settling payment:', error);
-                alert('Failed to settle payment. Please try again.');
+                showErrorMessage('Failed to settle payment. Please try again.');
             });
         }
 
-        // Load groups for split bill modal
-        function loadGroups() {
-            fetch('/api/groups')
-                .then(response => response.json())
-                .then(groups => {
-                    const select = document.getElementById('splitGroup');
-                    select.innerHTML = '<option value="">Select Group</option>';
-                    groups.forEach(group => {
-                        select.innerHTML += `<option value="${group.id}">${group.name}</option>`;
-                    });
-                })
-                .catch(error => console.error('Error loading groups:', error));
+        // Group creation functions
+        function showCreateGroupModal() {
+            document.getElementById('create-group-modal').style.display = 'flex';
+            document.getElementById('member-search').value = '';
+            document.getElementById('search-results').innerHTML = '';
+            document.getElementById('members-list').innerHTML = '';
         }
 
-        // Handle split type change
-        document.querySelector('input[name="splitType"]').addEventListener('change', function(e) {
-            const customContainer = document.getElementById('customSplitContainer');
-            if (e.target.value === 'custom') {
-                customContainer.style.display = 'block';
-                loadGroupMembers();
-            } else {
-                customContainer.style.display = 'none';
-            }
-        });
-
-        // Load group members for custom split
-        function loadGroupMembers() {
-            const groupId = document.getElementById('splitGroup').value;
-            if (!groupId) return;
-
-            fetch(`/api/groups/${groupId}/members`)
-                .then(response => response.json())
-                .then(members => {
-                    const container = document.getElementById('customSplitInputs');
-                    container.innerHTML = '';
-                    members.forEach(member => {
-                        container.innerHTML += `
-                            <div class="member-split">
-                                <label>${member.name}</label>
-                                <input type="number" step="0.01" 
-                                       data-user-id="${member.id}" 
-                                       placeholder="Amount">
-                            </div>
-                        `;
-                    });
-                })
-                .catch(error => console.error('Error loading members:', error));
-        }
-
-        // Handle split bill form submission
-        function splitBill(event) {
-            event.preventDefault();
-            const formData = {
-                amount: document.getElementById('splitAmount').value,
-                description: document.getElementById('splitDescription').value,
-                category: document.getElementById('splitCategory').value,
-                group_id: document.getElementById('splitGroup').value,
-                split_equally: document.querySelector('input[name="splitType"]:checked').value === 'equal'
-            };
-
-            if (!formData.split_equally) {
-                const customSplits = {};
-                document.querySelectorAll('#customSplitInputs input').forEach(input => {
-                    customSplits[input.dataset.userId] = input.value;
-                });
-                formData.custom_splits = customSplits;
-            }
-
-            fetch('/api/groups/' + formData.group_id + '/expenses', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(formData)
-            })
-            .then(response => response.json())
-            .then(data => {
-                closeModal('splitBillModal');
-                document.getElementById('splitBillForm').reset();
-                loadUpcomingSettlements(); // Refresh settlements
-            })
-            .catch(error => console.error('Error:', error));
+        function closeCreateGroupModal() {
+            document.getElementById('create-group-modal').style.display = 'none';
         }
 
         // Handle member search
@@ -413,7 +353,7 @@
                         } else {
                             results.innerHTML = users.map(user => `
                                 <div class="search-result" onclick="addMember(${user.id}, '${user.username}')">
-                                    ${user.name || user.username} (${user.username})
+                                    <i class="fas fa-user"></i> ${user.name || user.username} (@${user.username})
                                 </div>
                             `).join('');
                         }
@@ -435,8 +375,11 @@
                 memberDiv.className = 'selected-member';
                 memberDiv.dataset.userId = userId;
                 memberDiv.innerHTML = `
-                    <span>${username}</span>
-                    <button type="button" onclick="removeMember(${userId})">×</button>
+                    <i class="fas fa-user"></i>
+                    <span>@${username}</span>
+                    <button type="button" onclick="removeMember(${userId})" class="btn-danger">
+                        <i class="fas fa-times"></i>
+                    </button>
                 `;
                 membersList.appendChild(memberDiv);
             }
@@ -479,45 +422,175 @@
                 closeCreateGroupModal();
                 document.getElementById('create-group-form').reset();
                 document.getElementById('members-list').innerHTML = '';
+                showSuccessMessage('Group created successfully!');
                 // Redirect to groups page after successful creation
-                window.location.href = "{{ url_for('groups_page') }}";
+                setTimeout(() => {
+                    window.location.href = "{{ url_for('groups_page') }}";
+                }, 1500);
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert('Failed to create group. Please try again.');
+                showErrorMessage('Failed to create group. Please try again.');
             });
         }
 
-        // Show modals
-        function showSplitBillModal() {
-            loadGroups();
-            document.getElementById('splitBillModal').style.display = 'flex';
+        // Utility functions for notifications
+        function showSuccessMessage(message) {
+            showNotification(message, 'success');
         }
 
-        function showCreateGroupModal() {
-            document.getElementById('create-group-modal').style.display = 'flex';
-            document.getElementById('member-search').value = '';
-            document.getElementById('search-results').innerHTML = '';
-            document.getElementById('members-list').innerHTML = '';
+        function showErrorMessage(message) {
+            showNotification(message, 'error');
         }
 
-        function closeCreateGroupModal() {
-            document.getElementById('create-group-modal').style.display = 'none';
+        function showNotification(message, type) {
+            const notification = document.createElement('div');
+            notification.className = `notification notification-${type}`;
+            notification.innerHTML = `
+                <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i>
+                <span>${message}</span>
+            `;
+            
+            // Add notification styles if not already present
+            if (!document.querySelector('#notification-styles')) {
+                const style = document.createElement('style');
+                style.id = 'notification-styles';
+                style.textContent = `
+                    .notification {
+                        position: fixed;
+                        top: 20px;
+                        right: 20px;
+                        padding: 1rem 1.5rem;
+                        border-radius: var(--radius-lg);
+                        color: white;
+                        font-weight: 600;
+                        z-index: 10000;
+                        display: flex;
+                        align-items: center;
+                        gap: 0.5rem;
+                        animation: slideInRight 0.3s ease;
+                        box-shadow: var(--shadow-lg);
+                    }
+                    .notification-success {
+                        background: linear-gradient(135deg, var(--accent-color), #059669);
+                    }
+                    .notification-error {
+                        background: linear-gradient(135deg, var(--danger-color), #dc2626);
+                    }
+                    @keyframes slideInRight {
+                        from {
+                            transform: translateX(100%);
+                            opacity: 0;
+                        }
+                        to {
+                            transform: translateX(0);
+                            opacity: 1;
+                        }
+                    }
+                `;
+                document.head.appendChild(style);
+            }
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.animation = 'slideInRight 0.3s ease reverse';
+                setTimeout(() => {
+                    notification.remove();
+                }, 300);
+            }, 3000);
         }
 
         // Close modal when clicking outside
-        document.getElementById('create-group-modal').addEventListener('click', function(e) {
-            if (e.target === this) {
-                closeCreateGroupModal();
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('modal')) {
+                e.target.style.display = 'none';
             }
         });
 
-        // Initialize
-        document.addEventListener('DOMContentLoaded', function() {
-            loadUpcomingSettlements();
-            loadGroups();
-        });
+        // Add search results styles
+        const searchStyles = document.createElement('style');
+        searchStyles.textContent = `
+            .search-results {
+                position: absolute;
+                top: 100%;
+                left: 0;
+                right: 0;
+                background: white;
+                border: 1px solid var(--border-color);
+                border-radius: var(--radius-lg);
+                max-height: 200px;
+                overflow-y: auto;
+                z-index: 1000;
+                display: none;
+                box-shadow: var(--shadow-md);
+            }
+            .search-result {
+                padding: 0.75rem;
+                cursor: pointer;
+                transition: background-color 0.2s ease;
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+            }
+            .search-result:hover {
+                background-color: rgba(99, 102, 241, 0.1);
+            }
+            .search-result i {
+                color: var(--primary-color);
+            }
+            .member-search {
+                position: relative;
+            }
+            .selected-members {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 0.5rem;
+                margin-bottom: 1rem;
+                min-height: 40px;
+                padding: 0.5rem;
+                border: 2px dashed var(--border-color);
+                border-radius: var(--radius-lg);
+                background: rgba(99, 102, 241, 0.05);
+            }
+            .selected-member {
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+                padding: 0.5rem 0.75rem;
+                background: var(--primary-color);
+                color: white;
+                border-radius: var(--radius-lg);
+                font-size: 0.9rem;
+                font-weight: 500;
+            }
+            .selected-member button {
+                background: none;
+                border: none;
+                color: white;
+                cursor: pointer;
+                padding: 0.25rem;
+                border-radius: 50%;
+                width: 20px;
+                height: 20px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 0.75rem;
+            }
+            .selected-member button:hover {
+                background: rgba(255, 255, 255, 0.2);
+            }
+            .loading-placeholder {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 1rem;
+                padding: 2rem;
+                color: var(--text-secondary);
+            }
+        `;
+        document.head.appendChild(searchStyles);
     </script>
 </body>
-</html> 
- 
+</html>
